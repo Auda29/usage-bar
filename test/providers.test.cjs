@@ -89,3 +89,68 @@ test('one provider failure does not discard the other provider result', async ()
   assert.equal(results[0].status, 'error');
   assert.equal(results[1].status, 'ok');
 });
+
+test('a selected-provider refresh never sends requests to unchecked providers', async () => {
+  const seen = [];
+  const service = new ProviderService({ credentialLoader: async (id) => { seen.push(id); return credential; }, fetchImpl: async () => good() });
+  await service.readAll(['codex']);
+  assert.deepEqual(seen, ['codex']);
+  await service.readAll([]);
+  assert.deepEqual(seen, ['codex']);
+});
+test('new providers use the documented request methods and authorization schemes', async () => {
+  const seen = [];
+  const service = new ProviderService({ credentialLoader: async () => credential, fetchImpl: async (url, options) => {
+    seen.push({ url, options });
+    if (url.includes('github.com')) return Response.json({ quota_snapshots: { premium_interactions: { entitlement: 100, remaining: 75 } } });
+    if (url.includes('cursor.sh')) return Response.json({ planUsage: { totalPercentUsed: 25 } });
+    return Response.json({ data: { limit: 100, limit_remaining: 75 } });
+  } });
+  for (const id of ['copilot', 'cursor', 'openrouter']) assert.equal((await service.read(id)).status, 'ok');
+  assert.equal(seen[0].options.headers.Authorization, 'token test-token');
+  assert.equal(seen[1].options.method, 'POST');
+  assert.equal(seen[1].options.headers['Connect-Protocol-Version'], '1');
+  assert.equal(seen[2].url, 'https://openrouter.ai/api/v1/key');
+  assert(seen.every(({ options }) => options.redirect === 'error'));
+});
+test('Gemini renews an expired Google token in memory and discovers the quota project', async () => {
+  const seen = [];
+  const service = new ProviderService({ now: () => 100000, credentialLoader: async () => ({ token: 'old', refreshToken: 'refresh', expiresAt: 90000, oauthClient: { clientId: 'example-client', clientSecret: 'example-public-parameter' }, source: 'Gemini CLI' }), fetchImpl: async (url, options) => {
+    seen.push(url);
+    if (url.includes('oauth2.googleapis.com')) {
+      assert.equal(new URLSearchParams(options.body).get('client_id'), 'example-client');
+      assert.equal(new URLSearchParams(options.body).get('client_secret'), 'example-public-parameter');
+      return Response.json({ access_token: 'fresh', expires_in: 3600 });
+    }
+    assert.equal(options.headers.Authorization, 'Bearer fresh');
+    if (url.endsWith('loadCodeAssist')) return Response.json({ cloudaicompanionProject: 'example-project' });
+    assert.equal(JSON.parse(options.body).project, 'example-project');
+    return Response.json({ buckets: [{ modelId: 'gemini-pro', remainingFraction: 0.75 }] });
+  } });
+  assert.equal((await service.read('gemini')).rows[0].usedPercent, 25);
+  await service.read('gemini');
+  assert.equal(seen.filter((url) => url.includes('oauth2.googleapis.com')).length, 1);
+  assert.equal(seen.filter((url) => url.endsWith('loadCodeAssist')).length, 1);
+});
+
+test('replacing a saved credential discards an in-flight reading from the previous account', async () => {
+  let release;
+  let started;
+  const requestStarted = new Promise((resolve) => { started = resolve; });
+  const response = new Promise((resolve) => { release = resolve; });
+  const service = new ProviderService({ credentialLoader: async () => credential, fetchImpl: async () => { started(); return response; } });
+  const pending = service.read('codex');
+  await requestStarted;
+  service.forget('codex');
+  release(good());
+  const result = await pending;
+  assert.deepEqual(result.rows, []);
+  assert.equal(result.fetchedAt, null);
+});
+
+test('expired Gemini token without local client configuration asks for CLI renewal without a network request', async () => {
+  const service = new ProviderService({ now: () => 100000, credentialLoader: async () => ({ token: 'old', refreshToken: 'refresh', expiresAt: 90000 }), fetchImpl: async () => { assert.fail('No request without client configuration'); } });
+  const result = await service.read('gemini');
+  assert.equal(result.status, 'error');
+  assert.match(result.error, /mit Gemini CLI erneuern/);
+});

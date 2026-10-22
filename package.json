@@ -1,8 +1,8 @@
 {
   "name": "usage-bar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Compact Claude and Codex usage in the Windows notification area.",
+  "description": "Compact multi-provider AI usage in the Windows notification area.",
   "author": "NiklasW",
   "license": "MIT",
   "repository": {

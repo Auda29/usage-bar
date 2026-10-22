@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>Usage Bar · Provider</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="setup.css">
+    <script src="setup.js" defer></script>
+  </head>
+  <body class="setup-body">
+    <main class="setup-panel" data-ui>
+      <header class="setup-header"><h1>Provider</h1><p>Anhaken, was in deiner Usage Bar erscheinen soll.</p></header>
+      <div id="provider-settings" aria-label="Provider-Auswahl"></div>
+      <p id="setup-message" role="status" aria-live="polite"></p>
+      <p class="setup-footer">Die Auswahl wird sofort gespeichert. Tokens bleiben verschlüsselt auf diesem Windows-Konto.</p>
+    </main>
+  </body>
+</html>

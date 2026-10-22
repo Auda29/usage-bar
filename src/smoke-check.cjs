@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage }) {
+async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, showSetup, getTrayMenu }) {
   showPopup();
   await wait(250);
   assert(!tray.isDestroyed(), 'Tray must exist');
@@ -51,6 +51,51 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage })
   await popup.webContents.executeJavaScript(`document.getElementById('refresh').click()`);
   await wait(150);
   assert.equal(await popup.webContents.executeJavaScript(`document.getElementById('refresh').disabled`), false);
+  const { PROVIDER_IDS, PROVIDERS } = require('./catalog.cjs');
+  const choices = getTrayMenu().items.find((item) => item.label === 'Provider anzeigen').submenu.items;
+  assert.equal(choices.length, 6);
+  assert(choices.every((item) => item.type === 'checkbox'));
+  const setup = await showSetup();
+  await wait(150);
+  assert.equal(await setup.webContents.executeJavaScript(`document.querySelectorAll('input[type="checkbox"]').length`), 6);
+  assert.equal(await setup.webContents.executeJavaScript(`document.querySelectorAll('input[type="checkbox"]:checked').length`), 2);
+  const accountOptions = await setup.webContents.executeJavaScript(`[...document.getElementById('copilot-account').options].map(option => option.value)`);
+  assert.deepEqual(accountOptions, ['automatic', 'github-cli:usagebar-personal', 'github-cli:usagebar-work']);
+  assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').value`), 'automatic');
+  assert.equal(await setup.webContents.executeJavaScript(`document.querySelector('label[for="copilot-account"]').textContent`), 'GitHub-Konto für Usage Bar');
+  await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').value = 'github-cli:usagebar-work'; document.getElementById('copilot-account').dispatchEvent(new Event('change'))`);
+  await wait(150);
+  assert.match(await setup.webContents.executeJavaScript(`document.getElementById('setup-message').textContent`), /Demo/);
+  assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').value`), 'automatic', 'Failed selection must restore the saved choice');
+  assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').disabled`), false);
+  const copilotChoice = choices.find((item) => item.label === 'GitHub Copilot');
+  copilotChoice.checked = false;
+  copilotChoice.click(copilotChoice);
+  await wait(100);
+  assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('enable-copilot').checked`), true);
+  await setup.webContents.executeJavaScript(`window.usageBar.setProviders(${JSON.stringify(PROVIDER_IDS)})`);
+  await wait(100);
+  const allProviders = await read();
+  assert.deepEqual(allProviders.headings, PROVIDERS.map(({ name }) => name));
+  assert.equal(allProviders.overflowing, false);
+  assert(allProviders.logos);
+  assert.equal(popup.getContentBounds().height, allProviders.bodyHeight);
+  fs.writeFileSync(path.join(artifacts, 'usage-bar-all-providers.png'), (await popup.webContents.capturePage()).toPNG());
+  fs.writeFileSync(path.join(artifacts, 'usage-bar-provider-settings.png'), (await setup.webContents.capturePage()).toPNG());
+  await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').scrollIntoView({block: 'center'})`);
+  fs.writeFileSync(path.join(artifacts, 'usage-bar-copilot-accounts.png'), (await setup.webContents.capturePage()).toPNG());
+  const saved = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'settings.json'), 'utf8'));
+  assert.deepEqual(saved.providers, PROVIDER_IDS);
+  assert.equal(await setup.webContents.executeJavaScript(`document.querySelectorAll('input[type="password"]').length`), 3);
+  assert.equal(await setup.webContents.executeJavaScript(`[...document.querySelectorAll('input[type="password"]')].every(input => input.value === '')`), true);
+  const { safeStorage } = require('electron');
+  const encrypted = await safeStorage.encryptStringAsync('smoke-test-private-value');
+  assert(!encrypted.includes('smoke-test-private-value'));
+  assert.equal((await safeStorage.decryptStringAsync(encrypted)).result, 'smoke-test-private-value');
+  assert.equal(typeof require('node:sqlite').DatabaseSync, 'function', 'Packaged Electron must support the Cursor login reader');
+  await setup.webContents.executeJavaScript(`window.usageBar.setProviders(['claude', 'codex'])`);
+  await wait(100);
+  setup.close();
   await popup.webContents.executeJavaScript(`render({...state, settings: {...state.settings, displayMode: 'remaining'}})`);
   assert.equal((await read()).headline, '5-Hour80%');
   assert((await read()).rows.some(row => row.text.includes('109.0869435')), 'Credits must not flip in remaining mode');
@@ -62,6 +107,6 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage })
   await popup.webContents.executeJavaScript(`document.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape'}))`);
   await wait(100);
   assert.equal(popup.isVisible(), false);
-  console.log(JSON.stringify({ passed: true, packaged: app.isPackaged, systemUsesDarkColors: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI, checks: ['native tray', 'light/dark tray icons', 'dark native menu theme', 'sandboxed renderer', 'provider logos', 'row dimensions', 'credit precision', 'dynamic window height', 'collapse and expand', 'refresh IPC', 'remaining mode', 'stale indicators', 'empty provider selection', 'Escape hides popup'], screenshot: path.join(artifacts, 'usage-bar-demo.png') }, null, 2));
+  console.log(JSON.stringify({ passed: true, version: app.getVersion(), packaged: app.isPackaged, systemUsesDarkColors: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI, checks: ['native tray', 'light/dark tray icons', 'dark native menu theme', 'sandboxed renderer', 'provider logos', 'row dimensions', 'credit precision', 'dynamic window height', 'collapse and expand', 'refresh IPC', 'six provider checkboxes', 'native menu selection', 'persisted provider selection', 'all-provider layout', 'setup window', 'Windows token encryption', 'remaining mode', 'stale indicators', 'empty provider selection', 'Escape hides popup'], screenshot: path.join(artifacts, 'usage-bar-all-providers.png') }, null, 2));
 }
 module.exports = { runSmoke };

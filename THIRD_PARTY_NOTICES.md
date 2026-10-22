@@ -6,7 +6,7 @@ https://github.com/openchamber/openchamber
 
 Reference commit: 8e2db38a63ac56575aa1519acc49f19ba4d8fddb
 
-The compact layout follows `WorkStatusUsageSection.tsx` and `WorkStatusPrimitives.tsx`. Provider access and normalization follow the Claude and Codex quota modules. `assets/claude.svg` and `assets/codex.svg` are copied from the provider-logo assets. Provider names and marks belong to their respective owners. This project is independent of OpenChamber, Anthropic, and OpenAI.
+The compact layout follows `WorkStatusUsageSection.tsx` and `WorkStatusPrimitives.tsx`. Provider access and normalization follow the quota modules. The Claude, Codex, Gemini, Copilot, Cursor, and OpenRouter SVGs in `assets/` are copied from the provider-logo assets. Provider names and marks belong to their respective owners. This project is independent of OpenChamber and the supported providers.
 
 ```text
 MIT License
@@ -37,3 +37,9 @@ SOFTWARE.
 https://www.electronjs.org/
 
 The packaged application includes Electron's `LICENSE` and Chromium's `LICENSES.chromium.html` alongside the executable.
+
+## Gemini CLI protocol reference
+
+https://github.com/google-gemini/gemini-cli
+
+Gemini quota request shapes are based on the official Gemini CLI's `code_assist/server.ts` and `types.ts`. Public OAuth client parameters are read at runtime from the user's local Gemini CLI installation or explicit configuration and are not bundled with Usage Bar. The upstream project is licensed under Apache-2.0; see https://github.com/google-gemini/gemini-cli/blob/main/LICENSE.

@@ -2,6 +2,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('usageBar', {
   getState: () => ipcRenderer.invoke('usage:get'),
+  getSetupState: () => ipcRenderer.invoke('usage:setup-state'),
+  openSetup: () => ipcRenderer.invoke('usage:setup-open'),
+  setProviders: (ids) => ipcRenderer.invoke('usage:providers', ids),
+  saveCredential: (id, token) => ipcRenderer.invoke('usage:credential-save', id, token),
+  removeCredential: (id) => ipcRenderer.invoke('usage:credential-remove', id),
+  importCursor: () => ipcRenderer.invoke('usage:cursor-import'),
+  selectCopilotAccount: (selection) => ipcRenderer.invoke('usage:copilot-account', selection),
   refresh: () => ipcRenderer.invoke('usage:refresh'),
   setExpanded: (expanded) => ipcRenderer.invoke('usage:expanded', expanded),
   setHeight: (height) => ipcRenderer.send('usage:height', height),

@@ -1,9 +1,7 @@
 const { createHash } = require('node:crypto');
 const { loadCredential } = require('./credentials.cjs');
-const { parseClaude, parseCodex } = require('./model.cjs');
-
-const PROVIDERS = [{ id: 'claude', name: 'Claude' }, { id: 'codex', name: 'Codex' }];
-const urls = { claude: 'https://api.anthropic.com/api/oauth/usage', codex: 'https://chatgpt.com/backend-api/wham/usage' };
+const { PROVIDERS } = require('./catalog.cjs');
+const { fetchProvider } = require('./provider-requests.cjs');
 
 class ProviderService {
   constructor({ fetchImpl = fetch, credentialLoader = loadCredential, now = Date.now } = {}) {
@@ -29,25 +27,21 @@ class ProviderService {
       const credential = await this.loadCredential(id);
       if (!credential) {
         this.cache.delete(id);
-        return { ...meta, rows: [], status: 'unconfigured', error: `${meta.name === 'Claude' ? 'Claude Code' : 'Codex'} anmelden`, fetchedAt: null };
+        return { id: meta.id, name: meta.name, rows: [], status: 'unconfigured', error: `${meta.name} einrichten`, fetchedAt: null };
       }
-      const fingerprint = createHash('sha256').update(`${credential.token}\0${credential.accountId ?? ''}`).digest('hex');
+      const fingerprint = createHash('sha256').update(JSON.stringify([credential.token, credential.refreshToken, credential.accountId, credential.projectId])).digest('hex');
       entry = this.cache.get(id);
       if (entry?.fingerprint !== fingerprint) {
         entry = { fingerprint, rows: [], fetchedAt: null, retryAt: 0 };
         this.cache.set(id, entry);
       }
-      if (credential.expiresAt && credential.expiresAt <= this.now()) {
-        throw new Error(`Anmeldung abgelaufen. ${id === 'claude' ? 'Claude Code' : 'Codex'} öffnen.`);
+      if (credential.expiresAt && credential.expiresAt <= this.now() && !(id === 'gemini' && credential.refreshToken)) {
+        throw new Error(`Anmeldung abgelaufen. ${meta.name === 'Claude' ? 'Claude Code' : meta.name} öffnen.`);
       }
       if (entry.retryAt > this.now()) throw new Error('Zu viele Abfragen. Neuer Versuch nach der Wartezeit.');
-      const response = await this.fetch(urls[id], {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${credential.token}`,
-          ...(id === 'claude' ? { 'anthropic-beta': 'oauth-2025-04-20' } : {}),
-          ...(id === 'codex' && credential.accountId ? { 'ChatGPT-Account-Id': credential.accountId } : {}),
-        },
+      const request = async (url, options = {}) => {
+        const response = await this.fetch(url, {
+        method: 'GET', ...options,
         signal: AbortSignal.timeout(20000),
         redirect: 'error',
       });
@@ -63,24 +57,33 @@ class ProviderService {
         if (id === 'codex' && errorPayload?.error?.type === 'rejected_by_access_enforcement') {
           throw new Error('Diese Anmeldung erlaubt keine Usage-Abfrage. ChatGPT-Usage öffnen.');
         }
-        throw new Error(`Anmeldung erneuern. ${id === 'claude' ? 'Claude Code' : 'Codex'} öffnen.`);
+        if (id === 'gemini' && response.status === 403) {
+          throw new Error('Google gibt für diese Anmeldung keine Gemini-CLI-Kontingente frei. Gemini CLI mit diesem Konto einrichten.');
+        }
+        throw new Error(id === 'copilot' ? 'GitHub-Anmeldung erlaubt keine Copilot-Nutzung. Passenden Token einrichten.' : `Anmeldung erneuern. ${meta.name === 'Claude' ? 'Claude Code' : meta.name} öffnen.`);
       }
       if (!response.ok) throw new Error(`Abruf fehlgeschlagen (HTTP ${response.status}).`);
-      let payload;
-      try { payload = await response.json(); } catch { throw new Error('Ungültige Antwort des Providers.'); }
-      entry.rows = id === 'claude' ? parseClaude(payload) : parseCodex(payload);
+      try { return await response.json(); } catch { throw new Error('Ungültige Antwort des Providers.'); }
+      };
+      const rows = await fetchProvider(id, credential, entry, request, this.now);
+      if (this.cache.get(id) !== entry) {
+        entry = null;
+        throw new Error('Anmeldung geändert. Neuer Abruf folgt.');
+      }
+      entry.rows = rows;
       entry.fetchedAt = this.now();
       entry.retryAt = 0;
-      return { ...meta, rows: entry.rows, status: 'ok', error: null, fetchedAt: entry.fetchedAt, source: credential.source };
+      return { id: meta.id, name: meta.name, rows: entry.rows, status: 'ok', error: null, fetchedAt: entry.fetchedAt, source: credential.source };
     } catch (error) {
       const message = error?.name === 'TimeoutError' || error?.name === 'AbortError' ? 'Zeitüberschreitung beim Abruf.'
         : error instanceof TypeError ? 'Provider nicht erreichbar. Verbindung prüfen.'
           : error?.message || 'Abruf fehlgeschlagen.';
-      return { ...meta, rows: entry?.rows ?? [], status: entry?.rows.length ? 'stale' : 'error', error: message, fetchedAt: entry?.fetchedAt ?? null, retryAt: entry?.retryAt || null };
+      return { id: meta.id, name: meta.name, rows: entry?.rows ?? [], status: entry?.rows.length ? 'stale' : 'error', error: message, fetchedAt: entry?.fetchedAt ?? null, retryAt: entry?.retryAt || null };
     }
   }
 
-  readAll() { return Promise.all(PROVIDERS.map(({ id }) => this.read(id))); }
+  readAll(ids = PROVIDERS.map(({ id }) => id)) { return Promise.all(ids.map((id) => this.read(id))); }
+  forget(id) { this.cache.delete(id); }
 }
 
 module.exports = { ProviderService, PROVIDERS };

@@ -17,7 +17,7 @@ function displayedPercent(row) {
 
 function valueOf(row) {
   const percent = displayedPercent(row);
-  return row.valueLabel ?? (percent === null ? '—' : `${percent}%`);
+  return (state.settings.displayMode === 'remaining' ? row.remainingValueLabel ?? row.valueLabel : row.valueLabel) ?? (percent === null ? '—' : `${percent}%`);
 }
 
 function toneOf(row) {
@@ -54,7 +54,7 @@ function render(next) {
     elements.headline.title = '';
   }
   elements.providers.replaceChildren();
-  const visibleProviders = state.settings.providers.map((id) => state.providers.find((provider) => provider.id === id) ?? { id, name: id === 'claude' ? 'Claude' : 'Codex', rows: [], status: 'loading' });
+  const visibleProviders = state.settings.providers.map((id) => state.providers.find((provider) => provider.id === id) ?? { id, name: state.catalog?.find((provider) => provider.id === id)?.name || id, rows: [], status: 'loading' });
   for (const provider of visibleProviders) {
     const section = make('section', 'provider');
     section.setAttribute('aria-label', provider.name);
@@ -70,10 +70,12 @@ function render(next) {
     }
     section.append(heading);
     for (const row of provider.rows) {
-      const line = make('div', 'usage-row');
+      const line = make('div', `usage-row${row.valueLabel ? ' text-value' : ''}`);
       line.dataset.key = row.key;
       const label = make('span', 'row-label');
-      label.append(make('span', 'window-label', row.label));
+      const windowLabel = make('span', 'window-label', row.label);
+      windowLabel.title = row.label;
+      label.append(windowLabel);
       const reset = resetLabel(row.resetAt);
       if (reset) {
         const time = make('time', 'reset-label', reset);
@@ -82,9 +84,9 @@ function render(next) {
         label.append(time);
       }
       const value = make('span', `row-value ${toneOf(row)}`, valueOf(row));
-      value.title = row.valueLabel ? row.label : `${state.settings.displayMode === 'remaining' ? 'Verbleibend' : 'Verbraucht'}: ${valueOf(row)}`;
+      value.title = row.detail || (row.valueLabel ? row.label : `${state.settings.displayMode === 'remaining' ? 'Verbleibend' : 'Verbraucht'}: ${valueOf(row)}`);
       line.append(label, value);
-      line.title = provider.fetchedAt ? `Stand: ${new Date(provider.fetchedAt).toLocaleString()}` : '';
+      line.title = [provider.fetchedAt ? `Stand: ${new Date(provider.fetchedAt).toLocaleString()}` : '', row.resetAt ? `Reset: ${new Date(row.resetAt).toLocaleString()}` : ''].filter(Boolean).join(' · ');
       section.append(line);
     }
     if (provider.error || !provider.rows.length) {
@@ -92,9 +94,9 @@ function render(next) {
       const lastGood = provider.status === 'stale' && provider.fetchedAt ? ` Letzter Stand: ${new Date(provider.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : '';
       status.append(make('span', 'status-message', `${provider.error || (state.loading ? 'Wird geladen…' : 'Keine Limits verfügbar.')}${lastGood}`));
       if (provider.status !== 'loading') {
-        const link = make('button', 'status-link', 'Usage öffnen');
+        const link = make('button', 'status-link', 'Einrichten');
         link.type = 'button';
-        link.addEventListener('click', () => api?.openProvider(provider.id));
+        link.addEventListener('click', () => api?.openSetup());
         status.append(link);
       }
       section.append(status);
