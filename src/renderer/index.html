@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>Usage Bar</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="renderer.js" defer></script>
+  </head>
+  <body>
+    <main class="usage-panel" data-ui aria-label="Usage Bar">
+      <div class="section-heading">
+        <button id="toggle" type="button" class="section-toggle" aria-expanded="true" aria-controls="providers" title="Usage ein- oder ausklappen">
+          <svg class="icon timer" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 2h6M12 5a8 8 0 1 0 8 8 8 8 0 0 0-8-8ZM12 9v4l2 1M18 5l2 2"/></svg>
+          <h1>Usage</h1>
+          <svg class="icon chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>
+          <span id="headline" class="headline"></span>
+        </button>
+        <button id="refresh" type="button" class="icon-button" aria-label="Nutzung aktualisieren" title="Nutzung aktualisieren">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 18 17"/></svg>
+        </button>
+      </div>
+      <div id="providers" aria-live="polite" aria-busy="true"></div>
+      <p id="demo-note" hidden>Vorschau mit Beispieldaten</p>
+    </main>
+  </body>
+</html>

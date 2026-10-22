@@ -1,0 +1,50 @@
+/* Row sizes and hierarchy follow OpenChamber's WorkStatusUsageSection.
+   Width: 310 = 2 × 8 outer padding + 2 × 4 row padding + 286 content. */
+:root {
+  color-scheme: dark;
+  --background: #181b22;
+  --foreground: #e2e7ef;
+  --muted: #a4adba;
+  --icon: #9099a6;
+  --warning: #e3b341;
+  --error: #f07178;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--foreground);
+  background: var(--background);
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; user-select: none; overflow: hidden; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 1px solid #a3cdfe; outline-offset: -1px; border-radius: 4px; }
+.usage-panel { padding: 8px; width: 100%; max-height: 100vh; overflow-y: auto; scrollbar-width: thin; }
+.section-heading { display: flex; gap: 4px; height: 24px; margin-bottom: 2px; align-items: center; }
+.section-toggle { display: flex; flex: 1; min-width: 0; gap: 6px; align-items: center; border: 0; background: none; padding: 0 4px; height: 24px; text-align: left; }
+h1 { font-size: 12px; font-weight: 600; margin: 0; line-height: 18px; }
+.icon { display: block; width: 14px; height: 14px; flex: 0 0 14px; color: var(--icon); stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+.headline { display: flex; justify-content: flex-end; gap: 6px; margin-left: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.headline-label { overflow: hidden; text-overflow: ellipsis; }
+.icon-button { display: grid; place-items: center; background: none; border: 0; padding: 0; width: 24px; height: 24px; flex: 0 0 24px; }
+.icon-button:hover .icon, .section-toggle:hover .icon { color: var(--foreground); }
+.icon-button:disabled { cursor: default; }
+.icon-button:disabled .icon { animation: spin 1s linear infinite; }
+.section-toggle[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+.usage-row { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px; color: var(--muted); }
+.provider-heading { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px; margin: 0; font-size: 13px; font-weight: 600; }
+.provider-logo { width: 14px; height: 14px; flex: 0 0 14px; filter: invert(1); object-fit: contain; }
+.row-label { display: flex; align-items: baseline; flex: 1; min-width: 0; gap: 6px; }
+.window-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reset-label { font-size: 11px; white-space: nowrap; flex-shrink: 0; color: var(--muted); }
+.row-value { flex-shrink: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.warning { color: var(--warning); }
+.error { color: var(--error); }
+.provider-status { margin: 0; min-height: 28px; display: flex; align-items: center; padding: 4px; gap: 6px; line-height: 17px; font-size: 12px; color: var(--muted); }
+.status-message { flex: 1; min-width: 0; }
+.status-link { background: none; border: 0; padding: 2px 0; font-size: 11px; white-space: nowrap; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.status-link:hover { color: var(--foreground); }
+.stale-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--warning); margin-left: auto; }
+#demo-note { color: var(--icon); font-size: 11px; margin: 5px 4px 0; line-height: 16px; }
+[hidden] { display: none !important; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .icon-button:disabled .icon { animation: none; } }

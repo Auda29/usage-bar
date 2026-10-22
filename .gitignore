@@ -1,0 +1,9 @@
+node_modules/
+dist/
+artifacts/
+*.log
+.taste-skill/
+Usage Bar.lnk
+.env
+.env.*
+!.env.example
