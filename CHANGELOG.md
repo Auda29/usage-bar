@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 - 2026-10-22
 
 - Read Gemini OAuth client parameters from the local CLI installation or explicit configuration instead of bundling them.
 - Added a Copilot account selector with GitHub CLI accounts, visible account identity, and persistent selection independent of the CLI's active account.

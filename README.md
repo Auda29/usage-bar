@@ -26,7 +26,7 @@ The screenshot uses clearly labeled sample data.
 
 Each provider can be enabled independently under "Provider einrichten…" (Set up providers). Only enabled providers are polled. See [Authentication and data](#authentication-and-data) for setup instructions and account restrictions.
 
-This table describes the current source version. Release **v1.0.0** supports Claude and Codex; Gemini, GitHub Copilot, Cursor, and OpenRouter are part of the unreleased update.
+Release **v1.1.0** supports all six providers listed above. Release **v1.0.0** supports Claude and Codex only.
 
 ## Download
 
