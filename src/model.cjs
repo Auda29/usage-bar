@@ -76,14 +76,16 @@ function positionPopup(workArea, trayBounds, width, height) {
   height = Math.min(height, workArea.height);
   const hasAnchor = trayBounds && trayBounds.width > 0;
   const wantedX = hasAnchor ? trayBounds.x + trayBounds.width / 2 - width / 2 : workArea.x + workArea.width - width - margin;
-  const wantedY = hasAnchor && trayBounds.y < workArea.y
-    ? workArea.y + margin
-    : hasAnchor && trayBounds.y >= workArea.y && trayBounds.y < workArea.y + workArea.height
-      ? trayBounds.y + trayBounds.height - height
-      : workArea.y + workArea.height - height - margin;
+  // Auto-hidden taskbars can put the tray inside the work area. Keep the
+  // popup above a lower tray icon instead of aligning with its bottom edge.
+  const belowAnchor = hasAnchor && trayBounds.y + trayBounds.height / 2 < workArea.y + workArea.height / 2;
+  const wantedY = belowAnchor
+    ? Math.max(workArea.y, trayBounds.y + trayBounds.height) + margin
+    : Math.min(workArea.y + workArea.height, hasAnchor ? trayBounds.y : Infinity) - height - margin;
+  const verticalMargin = Math.min(margin, (workArea.height - height) / 2);
   return {
     x: Math.round(Math.max(workArea.x, Math.min(wantedX, workArea.x + workArea.width - width))),
-    y: Math.round(Math.max(workArea.y, Math.min(wantedY, workArea.y + workArea.height - height))),
+    y: Math.round(Math.max(workArea.y + verticalMargin, Math.min(wantedY, workArea.y + workArea.height - height - verticalMargin))),
     width, height,
   };
 }

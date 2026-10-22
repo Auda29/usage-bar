@@ -52,3 +52,38 @@ test('popup stays in the work area on bottom, top and secondary displays', () =>
     assert(popup.y + popup.height <= area.y + area.height);
   }
 });
+
+test('popup clears the tray icon when an auto-hidden bottom taskbar is revealed', () => {
+  for (const area of [
+    { x: 0, y: 0, width: 1920, height: 1080 },
+    { x: -1920, y: -1080, width: 1920, height: 1080 },
+  ]) {
+    const anchor = { x: area.x + 1800, y: area.y + 1040, width: 24, height: 32 };
+    for (const height of [42, 220, 720]) {
+      const popup = positionPopup(area, anchor, 310, height);
+      assert.equal(popup.y + popup.height, anchor.y - 8);
+    }
+  }
+});
+
+test('popup keeps a bottom gap with a hidden, unavailable or off-screen tray', () => {
+  const area = { x: 0, y: 0, width: 1920, height: 1078 };
+  for (const anchor of [
+    null,
+    { x: 0, y: 0, width: 0, height: 0 },
+    { x: 1800, y: 1080, width: 24, height: 32 },
+  ]) {
+    const popup = positionPopup(area, anchor, 310, 220);
+    assert.equal(popup.y + popup.height, area.height - 8);
+  }
+});
+
+test('popup clears top taskbars including an auto-hidden taskbar inside the work area', () => {
+  for (const area of [
+    { x: 0, y: 48, width: 1920, height: 1032 },
+    { x: 0, y: 0, width: 1920, height: 1080 },
+  ]) {
+    const anchor = { x: 1800, y: 8, width: 24, height: 32 };
+    assert.equal(positionPopup(area, anchor, 310, 220).y, Math.max(area.y, 40) + 8);
+  }
+});

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 - 2026-10-22
+
+- Keep the usage popup above the tray icon with a gap when the Windows taskbar auto-hides.
+
 ## 1.1.0 - 2026-10-22
 
 - Read Gemini OAuth client parameters from the local CLI installation or explicit configuration instead of bundling them.
