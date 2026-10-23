@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2 - 2026-10-23
+
+- Match Claude Code's OAuth credential precedence so `CLAUDE_CODE_OAUTH_TOKEN` takes priority over an expired stored sign-in.
+
 ## 1.1.1 - 2026-10-22
 
 - Keep the usage popup above the tray icon with a gap when the Windows taskbar auto-hides.

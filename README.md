@@ -17,7 +17,7 @@ The screenshot uses clearly labeled sample data.
 
 | Provider | Usage shown | Authentication |
 | --- | --- | --- |
-| Claude | Hourly and weekly limits, including reset times | Existing Claude Code OAuth sign-in; OpenCode OAuth or `CLAUDE_CODE_OAUTH_TOKEN` as fallbacks |
+| Claude | Hourly and weekly limits, including reset times | `CLAUDE_CODE_OAUTH_TOKEN` when set; otherwise the Claude Code OAuth sign-in or OpenCode OAuth |
 | Codex | Subscription usage limits, reset times, and credit balance | Existing Codex sign-in or OpenCode OAuth; an OpenAI API key alone is not sufficient |
 | Gemini | Model quotas and reset times | Gemini CLI Google sign-in or OpenCode OAuth; a Gemini API key alone is not sufficient |
 | GitHub Copilot | AI credit usage and reset date | GitHub CLI account selection, local Copilot or OpenCode sign-in, environment token, or manually saved token with Copilot usage access |
@@ -62,7 +62,7 @@ Usage Bar reads existing local sign-ins. Credentials are never passed to the ren
 
 Claude and Codex are enabled by default. Updates preserve existing settings, with the four additional providers initially disabled. Enable providers in the tray menu or setup window. One provider is enough; disabled providers do not make periodic network requests.
 
-**Claude:** Uses the `claudeAiOauth` section in `~/.claude/.credentials.json` by default. Respects `CLAUDE_CONFIG_DIR`. Falls back to OpenCode OAuth credentials and `CLAUDE_CODE_OAUTH_TOKEN`. Usage data comes from `https://api.anthropic.com/api/oauth/usage`.
+**Claude:** Uses `CLAUDE_CODE_OAUTH_TOKEN` first when set, matching Claude Code's OAuth credential precedence. Otherwise, reads the `claudeAiOauth` section in `~/.claude/.credentials.json`, respecting `CLAUDE_CONFIG_DIR`, and falls back to OpenCode OAuth credentials. An expired stored sign-in therefore does not override an explicit environment token. Usage data comes from `https://api.anthropic.com/api/oauth/usage`. Start Usage Bar from an environment containing the variable; a running app must be restarted to inherit changes to environment variables. If you intend to use the stored sign-in instead, remove the environment override before restarting the app.
 
 **Codex:** Uses the `tokens` section in `~/.codex/auth.json` by default, including `account_id`. Respects `CODEX_HOME`. Falls back to OpenCode OAuth credentials. Usage data comes from `https://chatgpt.com/backend-api/wham/usage`. An OpenAI API key alone does not provide ChatGPT subscription limits.
 

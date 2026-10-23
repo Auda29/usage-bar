@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { ProviderService } = require('../src/providers.cjs');
+const { loadCredential } = require('../src/credentials.cjs');
 const credential = { token: 'test-token', accountId: 'test-account', expiresAt: 9999999999999, source: 'Test' };
 const good = () => Response.json({ rate_limit: { primary_window: { used_percent: 44, limit_window_seconds: 604800 } }, credits: { balance: '109.0869435' } });
 
@@ -10,6 +11,25 @@ test('no credentials makes no network call', async () => {
   const result = await service.read('codex');
   assert.equal(called, false);
   assert.equal(result.status, 'unconfigured');
+});
+
+test('Claude OAuth environment credentials reach the usage endpoint without exposing the token', async () => {
+  let calls = 0;
+  const service = new ProviderService({
+    credentialLoader: () => loadCredential('claude', { env: { CLAUDE_CODE_OAUTH_TOKEN: 'explicit-oauth-token' } }),
+    fetchImpl: async (url, options) => {
+      calls++;
+      assert.equal(url, 'https://api.anthropic.com/api/oauth/usage');
+      assert.equal(options.headers.Authorization, 'Bearer explicit-oauth-token');
+      return Response.json({ five_hour: { utilization: 25 }, seven_day: { utilization: 65 } });
+    },
+  });
+  const result = await service.read('claude');
+  assert.equal(calls, 1);
+  assert.equal(result.status, 'ok');
+  assert.equal(result.source, 'Claude Code OAuth');
+  assert.equal(result.rows[0].usedPercent, 25);
+  assert(!JSON.stringify(result).includes('explicit-oauth-token'));
 });
 test('request uses fixed endpoint, disallows redirects, and keeps credentials out of results', async () => {
   const service = new ProviderService({ credentialLoader: async () => credential, fetchImpl: async (url, options) => {

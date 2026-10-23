@@ -73,14 +73,15 @@ async function loadCredential(provider, { env = process.env, home = os.homedir()
   if (managedCredential?.mode === 'local-cursor' && provider === 'cursor') return readCursorCredential({ env, home });
   if (validToken(managedCredential?.token)) return { token: validToken(managedCredential.token), expiresAt: provider === 'cursor' ? jwtExpiry(managedCredential.token) : null, source: 'Usage Bar' };
   if (provider === 'claude') {
+    // Match Claude Code: an explicit OAuth environment token overrides stored sign-ins.
+    const envToken = validToken(env.CLAUDE_CODE_OAUTH_TOKEN);
+    if (envToken) return { token: envToken, expiresAt: jwtExpiry(envToken), source: 'Claude Code OAuth' };
     const auth = await readJson(path.join(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), '.credentials.json'));
     const oauth = auth?.claudeAiOauth;
     const token = validToken(oauth?.accessToken);
     if (token) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
     const fallback = await openCodeCredential(provider, env, home);
     if (fallback) return fallback;
-    const envToken = validToken(env.CLAUDE_CODE_OAUTH_TOKEN);
-    if (envToken) return { token: envToken, expiresAt: jwtExpiry(envToken), source: 'Claude Code OAuth' };
   } else if (provider === 'codex') {
     const auth = await readJson(path.join(env.CODEX_HOME || path.join(home, '.codex'), 'auth.json'));
     const token = validToken(auth?.tokens?.access_token);
