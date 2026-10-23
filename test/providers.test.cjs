@@ -1,7 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { ProviderService } = require('../src/providers.cjs');
-const { loadCredential } = require('../src/credentials.cjs');
 const credential = { token: 'test-token', accountId: 'test-account', expiresAt: 9999999999999, source: 'Test' };
 const good = () => Response.json({ rate_limit: { primary_window: { used_percent: 44, limit_window_seconds: 604800 } }, credits: { balance: '109.0869435' } });
 
@@ -13,23 +12,52 @@ test('no credentials makes no network call', async () => {
   assert.equal(result.status, 'unconfigured');
 });
 
-test('Claude OAuth environment credentials reach the usage endpoint without exposing the token', async () => {
+test('Claude environment credentials are checked for profile access once before usage requests', async () => {
   let calls = 0;
+  let profileCalls = 0;
   const service = new ProviderService({
-    credentialLoader: () => loadCredential('claude', { env: { CLAUDE_CODE_OAUTH_TOKEN: 'explicit-oauth-token' } }),
+    credentialLoader: async () => ({ token: 'explicit-oauth-token', source: 'Claude Code OAuth', requiresProfileCheck: true }),
     fetchImpl: async (url, options) => {
       calls++;
-      assert.equal(url, 'https://api.anthropic.com/api/oauth/usage');
       assert.equal(options.headers.Authorization, 'Bearer explicit-oauth-token');
+      if (url === 'https://api.anthropic.com/api/oauth/profile') { profileCalls++; return Response.json({}); }
+      assert.equal(url, 'https://api.anthropic.com/api/oauth/usage');
       return Response.json({ five_hour: { utilization: 25 }, seven_day: { utilization: 65 } });
     },
   });
   const result = await service.read('claude');
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
   assert.equal(result.status, 'ok');
   assert.equal(result.source, 'Claude Code OAuth');
   assert.equal(result.rows[0].usedPercent, 25);
   assert(!JSON.stringify(result).includes('explicit-oauth-token'));
+  await service.read('claude');
+  assert.equal(calls, 3);
+  assert.equal(profileCalls, 1);
+});
+
+test('Claude inference-only token produces an actionable scope error and no usage or repeated profile requests', async () => {
+  let calls = 0;
+  let token = 'inference-only';
+  const service = new ProviderService({
+    credentialLoader: async () => ({ token, requiresProfileCheck: true }),
+    fetchImpl: async (url) => {
+      calls++;
+      assert.equal(url, 'https://api.anthropic.com/api/oauth/profile');
+      return Response.json({ error: { type: 'permission_error', message: 'OAuth token does not meet scope requirement any_of(user:profile, user:office)' } }, { status: 403 });
+    },
+  });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const result = await service.read('claude');
+    assert.equal(result.status, 'error');
+    assert.match(result.error, /Profilberechtigung/);
+    assert.match(result.error, /claude auth login/);
+    assert(!JSON.stringify(result).includes('inference-only'));
+  }
+  assert.equal(calls, 1, 'Do not repeatedly request missing permission');
+  token = 'new-sign-in';
+  await service.read('claude');
+  assert.equal(calls, 2, 'Changed token must be checked again');
 });
 test('request uses fixed endpoint, disallows redirects, and keeps credentials out of results', async () => {
   const service = new ProviderService({ credentialLoader: async () => credential, fetchImpl: async (url, options) => {

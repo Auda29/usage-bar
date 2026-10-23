@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.3 - 2026-10-23
+
+- Prefer a current Claude Code sign-in with profile permission over an inference-only environment token for usage queries.
+- Check environment-token profile access once per token and report missing permission with a sign-in instruction instead of repeatedly querying usage.
+
 ## 1.1.2 - 2026-10-23
 
 - Match Claude Code's OAuth credential precedence so `CLAUDE_CODE_OAUTH_TOKEN` takes priority over an expired stored sign-in.

@@ -73,12 +73,14 @@ async function loadCredential(provider, { env = process.env, home = os.homedir()
   if (managedCredential?.mode === 'local-cursor' && provider === 'cursor') return readCursorCredential({ env, home });
   if (validToken(managedCredential?.token)) return { token: validToken(managedCredential.token), expiresAt: provider === 'cursor' ? jwtExpiry(managedCredential.token) : null, source: 'Usage Bar' };
   if (provider === 'claude') {
-    // Match Claude Code: an explicit OAuth environment token overrides stored sign-ins.
-    const envToken = validToken(env.CLAUDE_CODE_OAUTH_TOKEN);
-    if (envToken) return { token: envToken, expiresAt: jwtExpiry(envToken), source: 'Claude Code OAuth' };
     const auth = await readJson(path.join(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), '.credentials.json'));
     const oauth = auth?.claudeAiOauth;
     const token = validToken(oauth?.accessToken);
+    // Usage needs profile permission. A setup-token can work for inference without it.
+    const profileScope = Array.isArray(oauth?.scopes) && oauth.scopes.some((scope) => scope === 'user:profile' || scope === 'user:office');
+    if (token && profileScope && (!oauth.expiresAt || oauth.expiresAt > Date.now())) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
+    const envToken = validToken(env.CLAUDE_CODE_OAUTH_TOKEN);
+    if (envToken) return { token: envToken, expiresAt: jwtExpiry(envToken), source: 'Claude Code OAuth', requiresProfileCheck: true };
     if (token) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
     const fallback = await openCodeCredential(provider, env, home);
     if (fallback) return fallback;

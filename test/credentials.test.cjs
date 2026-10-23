@@ -24,20 +24,39 @@ test('reads only Claude OAuth data from the credentials file', async (t) => {
   assert.equal(result.source, 'Claude Code');
 });
 
-test('Claude environment OAuth token takes precedence over stored and OpenCode sign-ins', async (t) => {
+test('Claude environment token remains available when the stored sign-in is expired or has unknown scope', async (t) => {
   const options = await fixture(t);
   options.env.CLAUDE_CODE_OAUTH_TOKEN = 'explicit-oauth-token';
   const file = path.join(options.home, '.claude', '.credentials.json');
   await write(file, { claudeAiOauth: { accessToken: 'expired-file-token', refreshToken: 'shared-refresh', expiresAt: 1 } });
   await write(path.join(options.home, '.local', 'share', 'opencode', 'auth.json'), { anthropic: { access: 'other-account-token' } });
   const before = await fs.readFile(file, 'utf8');
-  assert.deepEqual(await loadCredential('claude', options), { token: 'explicit-oauth-token', expiresAt: null, source: 'Claude Code OAuth' });
+  assert.deepEqual(await loadCredential('claude', options), { token: 'explicit-oauth-token', expiresAt: null, source: 'Claude Code OAuth', requiresProfileCheck: true });
   await write(file, { claudeAiOauth: { accessToken: 'valid-file-token', expiresAt: 9999999999999 } });
   assert.equal((await loadCredential('claude', options)).token, 'explicit-oauth-token');
   await fs.writeFile(file, before);
   options.env.CLAUDE_CODE_OAUTH_TOKEN = 'invalid\nheader';
   assert.equal((await loadCredential('claude', options)).token, 'expired-file-token');
   assert.equal(await fs.readFile(file, 'utf8'), before);
+});
+
+test('fresh Claude profile login is preferred over an inference environment token without altering credentials', async (t) => {
+  const options = await fixture(t);
+  options.env.CLAUDE_CODE_OAUTH_TOKEN = 'inference-only-token';
+  const file = path.join(options.home, '.claude', '.credentials.json');
+  for (const scope of ['user:profile', 'user:office']) {
+    await write(file, { claudeAiOauth: { accessToken: 'usage-enabled-token', expiresAt: 9999999999999, scopes: ['user:inference', scope] } });
+    const before = await fs.readFile(file, 'utf8');
+    const credential = await loadCredential('claude', options);
+    assert.equal(credential.token, 'usage-enabled-token');
+    assert.equal(credential.source, 'Claude Code');
+    assert.equal(credential.requiresProfileCheck, undefined);
+    assert.equal(await fs.readFile(file, 'utf8'), before);
+  }
+  await write(file, { claudeAiOauth: { accessToken: 'expired-usage-token', expiresAt: 1, scopes: ['user:profile'] } });
+  assert.equal((await loadCredential('claude', options)).token, 'inference-only-token');
+  await write(file, { claudeAiOauth: { accessToken: 'inference-file-token', expiresAt: 9999999999999, scopes: ['user:inference'] } });
+  assert.equal((await loadCredential('claude', options)).token, 'inference-only-token');
 });
 test('Codex token with account ID is read without altering the file', async (t) => {
   const options = await fixture(t);

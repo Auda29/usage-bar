@@ -39,6 +39,7 @@ class ProviderService {
         throw new Error(`Anmeldung abgelaufen. ${meta.name === 'Claude' ? 'Claude Code' : meta.name} öffnen.`);
       }
       if (entry.retryAt > this.now()) throw new Error('Zu viele Abfragen. Neuer Versuch nach der Wartezeit.');
+      if (entry.profileError) throw new Error(entry.profileError);
       const request = async (url, options = {}) => {
         const response = await this.fetch(url, {
         method: 'GET', ...options,
@@ -54,6 +55,10 @@ class ProviderService {
       }
       if (response.status === 401 || response.status === 403) {
         const errorPayload = await response.json().catch(() => null);
+        if (id === 'claude' && response.status === 403 && url === 'https://api.anthropic.com/api/oauth/profile' && typeof errorPayload?.error?.message === 'string' && errorPayload.error.message.includes('scope requirement')) {
+          entry.profileError = 'OAuth-Token hat keine Profilberechtigung für Usage. Mit „claude auth login --claudeai“ anmelden.';
+          throw new Error(entry.profileError);
+        }
         if (id === 'codex' && errorPayload?.error?.type === 'rejected_by_access_enforcement') {
           throw new Error('Diese Anmeldung erlaubt keine Usage-Abfrage. ChatGPT-Usage öffnen.');
         }
@@ -65,6 +70,10 @@ class ProviderService {
       if (!response.ok) throw new Error(`Abruf fehlgeschlagen (HTTP ${response.status}).`);
       try { return await response.json(); } catch { throw new Error('Ungültige Antwort des Providers.'); }
       };
+      if (id === 'claude' && credential.requiresProfileCheck && !entry.profileChecked) {
+        await request('https://api.anthropic.com/api/oauth/profile', { headers: { Authorization: `Bearer ${credential.token}`, 'anthropic-beta': 'oauth-2025-04-20' } });
+        entry.profileChecked = true;
+      }
       const rows = await fetchProvider(id, credential, entry, request, this.now);
       if (this.cache.get(id) !== entry) {
         entry = null;

@@ -17,7 +17,7 @@ The screenshot uses clearly labeled sample data.
 
 | Provider | Usage shown | Authentication |
 | --- | --- | --- |
-| Claude | Hourly and weekly limits, including reset times | `CLAUDE_CODE_OAUTH_TOKEN` when set; otherwise the Claude Code OAuth sign-in or OpenCode OAuth |
+| Claude | Hourly and weekly limits, including reset times | Claude Code OAuth sign-in with profile permission; environment token or OpenCode OAuth as fallbacks |
 | Codex | Subscription usage limits, reset times, and credit balance | Existing Codex sign-in or OpenCode OAuth; an OpenAI API key alone is not sufficient |
 | Gemini | Model quotas and reset times | Gemini CLI Google sign-in or OpenCode OAuth; a Gemini API key alone is not sufficient |
 | GitHub Copilot | AI credit usage and reset date | GitHub CLI account selection, local Copilot or OpenCode sign-in, environment token, or manually saved token with Copilot usage access |
@@ -62,7 +62,9 @@ Usage Bar reads existing local sign-ins. Credentials are never passed to the ren
 
 Claude and Codex are enabled by default. Updates preserve existing settings, with the four additional providers initially disabled. Enable providers in the tray menu or setup window. One provider is enough; disabled providers do not make periodic network requests.
 
-**Claude:** Uses `CLAUDE_CODE_OAUTH_TOKEN` first when set, matching Claude Code's OAuth credential precedence. Otherwise, reads the `claudeAiOauth` section in `~/.claude/.credentials.json`, respecting `CLAUDE_CONFIG_DIR`, and falls back to OpenCode OAuth credentials. An expired stored sign-in therefore does not override an explicit environment token. Usage data comes from `https://api.anthropic.com/api/oauth/usage`. Start Usage Bar from an environment containing the variable; a running app must be restarted to inherit changes to environment variables. If you intend to use the stored sign-in instead, remove the environment override before restarting the app.
+**Claude:** Reads the `claudeAiOauth` section in `~/.claude/.credentials.json`, respecting `CLAUDE_CONFIG_DIR`. A current stored sign-in with `user:profile` or `user:office` permission takes priority for usage queries, even when `CLAUDE_CODE_OAUTH_TOKEN` is set. Otherwise, an environment token remains available, followed by the stored sign-in and OpenCode OAuth fallback. Usage data comes from `https://api.anthropic.com/api/oauth/usage`.
+
+Being signed in for model requests does not guarantee usage access. A token from `claude setup-token` may lack profile permission. Usage Bar checks environment-token profile access once per token and reports missing permission without repeatedly querying the usage endpoint. Run `claude auth login --claudeai` and complete the browser sign-in to obtain the full Claude Code login. Usage Bar rereads that file on refresh; it does not remove your environment token or rotate shared refresh tokens. Changes to environment variables themselves require restarting the app. Provider-side rate limits still apply independently of authentication.
 
 **Codex:** Uses the `tokens` section in `~/.codex/auth.json` by default, including `account_id`. Respects `CODEX_HOME`. Falls back to OpenCode OAuth credentials. Usage data comes from `https://chatgpt.com/backend-api/wham/usage`. An OpenAI API key alone does not provide ChatGPT subscription limits.
 
