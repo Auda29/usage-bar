@@ -6,6 +6,7 @@ const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
 const { githubAccountToken, validGitHubLogin } = require('./github-accounts.cjs');
 const { loadGeminiClient } = require('./gemini-client.cjs');
+const { renewClaudeSignIn, hasClaudeProfileScope } = require('./claude-session.cjs');
 
 async function readJson(file) {
   try {
@@ -62,7 +63,7 @@ async function githubCliToken() {
   } catch { return null; }
 }
 
-async function loadCredential(provider, { env = process.env, home = os.homedir(), managedCredential = null, githubTokenLoader = githubCliToken, githubAccountTokenLoader = githubAccountToken } = {}) {
+async function loadCredential(provider, { env = process.env, home = os.homedir(), managedCredential = null, githubTokenLoader = githubCliToken, githubAccountTokenLoader = githubAccountToken, claudeSessionRenewer = renewClaudeSignIn } = {}) {
   if (provider === 'copilot' && managedCredential?.mode === 'github-cli') {
     const login = managedCredential.login;
     if (!validGitHubLogin(login)) throw new Error('Ungültiges GitHub-Konto. Konto erneut auswählen.');
@@ -73,11 +74,15 @@ async function loadCredential(provider, { env = process.env, home = os.homedir()
   if (managedCredential?.mode === 'local-cursor' && provider === 'cursor') return readCursorCredential({ env, home });
   if (validToken(managedCredential?.token)) return { token: validToken(managedCredential.token), expiresAt: provider === 'cursor' ? jwtExpiry(managedCredential.token) : null, source: 'Usage Bar' };
   if (provider === 'claude') {
-    const auth = await readJson(path.join(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), '.credentials.json'));
-    const oauth = auth?.claudeAiOauth;
+    const file = path.join(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), '.credentials.json');
+    const auth = await readJson(file);
+    let oauth = auth?.claudeAiOauth;
+    if (hasClaudeProfileScope(oauth) && oauth?.refreshToken && typeof oauth.expiresAt === 'number' && oauth.expiresAt <= Date.now() + 60000) {
+      try { oauth = await claudeSessionRenewer(file, { env, home }) || oauth; } catch { /* Keep existing fallback sources available. */ }
+    }
     const token = validToken(oauth?.accessToken);
     // Usage needs profile permission. A setup-token can work for inference without it.
-    const profileScope = Array.isArray(oauth?.scopes) && oauth.scopes.some((scope) => scope === 'user:profile' || scope === 'user:office');
+    const profileScope = hasClaudeProfileScope(oauth);
     if (token && profileScope && (!oauth.expiresAt || oauth.expiresAt > Date.now())) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
     const envToken = validToken(env.CLAUDE_CODE_OAUTH_TOKEN);
     if (envToken) return { token: envToken, expiresAt: jwtExpiry(envToken), source: 'Claude Code OAuth', requiresProfileCheck: true };

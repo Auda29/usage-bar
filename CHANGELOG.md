@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.4 - 2026-10-26
+
+- Renew expiring Claude profile sign-ins through the official native Claude CLI instead of falling back to an inference-only environment token after eight hours.
+- Share concurrent renewal requests, throttle failed attempts, and leave the global environment unchanged.
+- Automatic Claude renewal requires native Claude CLI 2.1.310 or later; unsupported or missing CLI installations do not trigger interactive login.
+
 ## 1.1.3 - 2026-10-23
 
 - Prefer a current Claude Code sign-in with profile permission over an inference-only environment token for usage queries.

@@ -58,6 +58,23 @@ test('fresh Claude profile login is preferred over an inference environment toke
   await write(file, { claudeAiOauth: { accessToken: 'inference-file-token', expiresAt: 9999999999999, scopes: ['user:inference'] } });
   assert.equal((await loadCredential('claude', options)).token, 'inference-only-token');
 });
+
+test('expiring profile login is renewed through the owning CLI before considering an inference environment token', async t => {
+  const options = await fixture(t);
+  options.env.CLAUDE_CODE_OAUTH_TOKEN = 'inference-only-token';
+  const file = path.join(options.home, '.claude', '.credentials.json');
+  await write(file, {claudeAiOauth: {accessToken: 'old-token', refreshToken: 'refresh', expiresAt: 1, scopes: ['user:profile']}});
+  let renewals = 0;
+  const result = await loadCredential('claude', {...options, claudeSessionRenewer: async (requestedFile, config) => {
+    renewals++;
+    assert.equal(requestedFile, file);
+    assert.equal(config.home, options.home);
+    return {accessToken: 'renewed-profile-token', expiresAt: 9999999999999, scopes: ['user:profile']};
+  }});
+  assert.equal(renewals, 1);
+  assert.equal(result.token, 'renewed-profile-token');
+  assert.equal(result.source, 'Claude Code');
+});
 test('Codex token with account ID is read without altering the file', async (t) => {
   const options = await fixture(t);
   const file = path.join(options.home, '.codex', 'auth.json');
