@@ -50,7 +50,8 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   const full = await read();
   assert.deepEqual(full.headings, ['Claude', 'Codex']);
   assert.equal(full.rows.length, 4);
-  assert(full.rows.every((row) => Math.abs(row.height - 28) < 0.05), JSON.stringify(full.rows));
+  // The default Kompakt design uses 26 px table rows.
+  assert(full.rows.every((row) => Math.abs(row.height - 26) < 0.05), JSON.stringify(full.rows));
   assert(full.rows.some((row) => row.text.includes('109.0869435')));
   assert.equal(full.headline, '5-Hour20%');
   assert(full.logos, 'Logos must load');
@@ -121,7 +122,7 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   fs.writeFileSync(path.join(artifacts, 'usage-bar-all-providers.png'), (await popup.webContents.capturePage()).toPNG());
   await require('./smoke-themes.cjs').checkThemes({ popup, getTrayMenu, app, artifacts });
   assertStartup(true);
-  assert.deepEqual((await read()).headings, PROVIDERS.map(({ name }) => name), 'Classic design returns after the theme tour');
+  assert.deepEqual((await read()).headings, PROVIDERS.map(({ name }) => name), 'Default design returns after the theme tour');
   fs.writeFileSync(path.join(artifacts, 'usage-bar-provider-settings.png'), (await setup.webContents.capturePage()).toPNG());
   await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').scrollIntoView({block: 'center'})`);
   fs.writeFileSync(path.join(artifacts, 'usage-bar-copilot-accounts.png'), (await setup.webContents.capturePage()).toPNG());

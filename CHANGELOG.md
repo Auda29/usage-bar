@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Make Kompakt the default design for new installations and for settings without a saved design, including updates from 1.1.6 and earlier.
+- Mark Klassisch as legacy: it is listed last in the "Design" menu as "Klassisch (Legacy)", stays selectable, and may be removed in a future version. An explicitly saved Klassisch choice is kept.
+
 ## 1.2.0 - 2026-10-27
 
 - Add a "Design" tray submenu with seven popup designs: Klassisch (unchanged default), Fluent, Kacheln, Terminal, Fokus, Hell and Kompakt. The window background follows the selected design.

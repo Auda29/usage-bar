@@ -53,7 +53,7 @@ The interface currently uses German labels; their English meanings are included 
 - Click the refresh button or press F5 to update the values. Updates also run automatically every 3 minutes.
 - Press Escape, click outside the window, or click the tray icon again to close the view.
 - Right-click to open the menu with provider selection, used/remaining display, header status, and optional startup with Windows.
-- Under "Design", pick one of seven looks: Klassisch (the original), Fluent, Kacheln (tiles), Terminal, Fokus, Hell (light) and Kompakt (compact).
+- Under "Design", pick one of seven looks: Kompakt (compact, the default), Fluent, Kacheln (tiles), Terminal, Fokus, Hell (light) and Klassisch (Legacy). Klassisch is the original look from versions up to 1.1.6. It remains available for now but receives no further design work and may be removed in a future version.
 - Under "Funktionen" (Features), turn on optional views that work with every design:
   - **Verbrauchstempo (Pace):** marks how much of each limit's time window has passed. A warning arrow appears when usage at the current rate would hit 100% before the reset. Limits without a reported window length, such as GitHub Copilot and Cursor, show no pace marker.
   - **Reset-Zeitleiste (Reset timeline):** shows when each limit resets over the next two weeks. The first 24 hours take up more of the axis.

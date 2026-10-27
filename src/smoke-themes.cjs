@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { THEMES, FEATURES } = require('./catalog.cjs');
+const { THEMES, FEATURES, DEFAULT_SETTINGS } = require('./catalog.cjs');
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -71,7 +71,7 @@ async function checkThemes({ popup, getTrayMenu, app, artifacts }) {
     await checkCollapsed(popup, theme.id);
   }
   setFeatures(getTrayMenu, false);
-  menuItem(getTrayMenu, 'Design', THEMES[0].name).click();
+  menuItem(getTrayMenu, 'Design', THEMES.find(({ id }) => id === DEFAULT_SETTINGS.theme).name).click();
   await wait(150);
 }
 
