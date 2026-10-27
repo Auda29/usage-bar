@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.6 - 2026-10-27
+
+- Keep "Mit Windows starten" checked when changing display mode, provider selection, the headline provider, or the expanded view. Read the Windows startup registration using the same executable path and `--hidden` argument used when enabling startup.
+
 ## 1.1.5 - 2026-10-27
 
 - Report empty or cleared Claude Code credentials as an expired or invalid login instead of "Claude einrichten".

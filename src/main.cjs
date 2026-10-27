@@ -10,6 +10,7 @@ const { loadCredential, readCursorCredential } = require('./credentials.cjs');
 const { CredentialVault } = require('./vault.cjs');
 const { listGitHubAccounts, githubAccountLogin } = require('./github-accounts.cjs');
 const { signInClaude, ClaudeSignInError, CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
+const loginItemOptions = { path: process.execPath, args: ['--hidden'] };
 
 const smoke = process.env.USAGE_BAR_SMOKE === '1';
 const demo = smoke || process.argv.includes('--demo');
@@ -190,8 +191,8 @@ function buildMenu() {
       click: () => updateSettings({ headlineProvider: id }),
     })) },
     { label: 'Mit Windows starten', type: 'checkbox', enabled: app.isPackaged,
-      checked: app.isPackaged && app.getLoginItemSettings().openAtLogin,
-      click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked, path: process.execPath, args: ['--hidden'] }),
+      checked: app.isPackaged && app.getLoginItemSettings(loginItemOptions).openAtLogin,
+      click: (item) => app.setLoginItemSettings({ ...loginItemOptions, openAtLogin: item.checked }),
     },
     { type: 'separator' },
     { label: 'Usage im Browser', submenu: PROVIDERS.map(({ id, name }) => ({ label: name, click: () => void shell.openExternal(externalLinks[id]) })) },

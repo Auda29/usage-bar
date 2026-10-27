@@ -5,6 +5,27 @@ const path = require('node:path');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, showSetup, getTrayMenu }) {
+  // Exercise the real menu rebuilds without changing the user's Windows Run key.
+  const originalGetLoginItemSettings = app.getLoginItemSettings;
+  const originalSetLoginItemSettings = app.setLoginItemSettings;
+  let registeredStartup = null;
+  const startupItem = () => getTrayMenu().items.find(item => item.label === 'Mit Windows starten');
+  if (app.isPackaged) {
+    app.getLoginItemSettings = ({path: executable = process.execPath, args = []} = {}) => ({
+      openAtLogin: Boolean(registeredStartup && registeredStartup.path === executable && JSON.stringify(registeredStartup.args) === JSON.stringify(args)),
+    });
+    app.setLoginItemSettings = ({openAtLogin, ...options}) => {
+      assert.equal(options.path, process.execPath);
+      assert.deepEqual(options.args, ['--hidden']);
+      registeredStartup = openAtLogin ? options : null;
+    };
+    startupItem().checked = false;
+    startupItem().click(startupItem());
+    assert(registeredStartup, 'Startup click must register the hidden launch');
+  }
+  const assertStartup = expected => {
+    if (app.isPackaged) assert.equal(startupItem().checked, expected, 'Startup checkbox must survive unrelated settings changes');
+  };
   showPopup();
   await wait(250);
   assert(!tray.isDestroyed(), 'Tray must exist');
@@ -45,9 +66,11 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert.equal(collapsed.expanded, 'false');
   assert.equal(collapsed.hidden, true);
   assert(popup.getContentBounds().height < 60);
+  assertStartup(true);
   await popup.webContents.executeJavaScript(`document.getElementById('toggle').click()`);
   await wait(150);
   assert.equal((await read()).expanded, 'true');
+  assertStartup(true);
   await popup.webContents.executeJavaScript(`document.getElementById('refresh').click()`);
   await wait(150);
   assert.equal(await popup.webContents.executeJavaScript(`document.getElementById('refresh').disabled`), false);
@@ -85,6 +108,16 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert.equal(allProviders.overflowing, false);
   assert(allProviders.logos);
   assert.equal(popup.getContentBounds().height, allProviders.bodyHeight);
+  assertStartup(true);
+  const displayChoices = getTrayMenu().items.find(item => item.label === 'Anzeige').submenu.items;
+  displayChoices.find(item => item.label === 'Verbleibend').click();
+  assertStartup(true);
+  getTrayMenu().items.find(item => item.label === 'Anzeige').submenu.items.find(item => item.label === 'Verbraucht').click();
+  assertStartup(true);
+  getTrayMenu().items.find(item => item.label === 'Kurzstatus in der Kopfzeile').submenu.items.find(item => item.label === 'Codex').click();
+  assertStartup(true);
+  getTrayMenu().items.find(item => item.label === 'Kurzstatus in der Kopfzeile').submenu.items.find(item => item.label === 'Claude').click();
+  assertStartup(true);
   fs.writeFileSync(path.join(artifacts, 'usage-bar-all-providers.png'), (await popup.webContents.capturePage()).toPNG());
   fs.writeFileSync(path.join(artifacts, 'usage-bar-provider-settings.png'), (await setup.webContents.capturePage()).toPNG());
   await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').scrollIntoView({block: 'center'})`);
@@ -98,8 +131,14 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert(!encrypted.includes('smoke-test-private-value'));
   assert.equal((await safeStorage.decryptStringAsync(encrypted)).result, 'smoke-test-private-value');
   assert.equal(typeof require('node:sqlite').DatabaseSync, 'function', 'Packaged Electron must support the Cursor login reader');
+  if (app.isPackaged) {
+    startupItem().checked = true;
+    startupItem().click(startupItem());
+  }
   await setup.webContents.executeJavaScript(`window.usageBar.setProviders(['claude', 'codex'])`);
   await wait(100);
+  assertStartup(false);
+  assert.equal(registeredStartup, null);
   setup.close();
   await popup.webContents.executeJavaScript(`render({...state, settings: {...state.settings, displayMode: 'remaining'}})`);
   assert.equal((await read()).headline, '5-Hour80%');
@@ -112,6 +151,8 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   await popup.webContents.executeJavaScript(`document.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape'}))`);
   await wait(100);
   assert.equal(popup.isVisible(), false);
+  app.getLoginItemSettings = originalGetLoginItemSettings;
+  app.setLoginItemSettings = originalSetLoginItemSettings;
   console.log(JSON.stringify({ passed: true, version: app.getVersion(), packaged: app.isPackaged, systemUsesDarkColors: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI, checks: ['native tray', 'light/dark tray icons', 'dark native menu theme', 'sandboxed renderer', 'provider logos', 'row dimensions', 'credit precision', 'dynamic window height', 'collapse and expand', 'refresh IPC', 'six provider checkboxes', 'native menu selection', 'persisted provider selection', 'all-provider layout', 'setup window', 'Windows token encryption', 'remaining mode', 'stale indicators', 'empty provider selection', 'Escape hides popup'], screenshot: path.join(artifacts, 'usage-bar-all-providers.png') }, null, 2));
 }
 module.exports = { runSmoke };
