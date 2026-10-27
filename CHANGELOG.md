@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Show every design and the optional features as screenshots in the README. `npm run screenshots` regenerates them from sample data.
+- Keep the number and unit of a reset time on one line when the Kacheln warning banner wraps.
+
 ## 1.2.1 - 2026-10-27
 
 - Make Kompakt the default design for new installations and for settings without a saved design, including updates from 1.1.6 and earlier.

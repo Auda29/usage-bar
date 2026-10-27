@@ -1,17 +1,51 @@
 # Usage Bar
 
-A small Windows tray app for usage limits across Claude, Codex, Gemini, GitHub Copilot, Cursor, and OpenRouter. Its compact view follows OpenChamber's Usage section.
+A small Windows tray app for usage limits across Claude, Codex, Gemini, GitHub Copilot, Cursor, and OpenRouter, with seven selectable designs.
 
 ![Usage Bar showing all six selectable providers](docs/images/usage-bar.png)
 
 The screenshot uses clearly labeled sample data.
 
+- Seven designs and optional pace, reset timeline and sort-by-usage views; see [Designs](#designs).
 - Hourly and weekly limits, reset times, and Codex credits in one compact view.
 - Automatic updates every 3 minutes and manual refresh.
 - Light or dark tray icon to match the taskbar, with a dark context menu.
 - Provider selection, used or remaining quota display, and optional startup with Windows.
 - Individual provider checkboxes; only enabled services are polled in the background.
 - Setup window and Windows-encrypted storage for manually entered tokens.
+
+## Designs
+
+Right-click the tray icon and choose "Design" to switch. Every design shows the same data; the screenshots use sample data for four providers.
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="docs/images/designs/compact.png" width="200" alt="Kompakt design"><br><b>Kompakt</b><br><sub>Standard</sub></td>
+    <td align="center" valign="top"><img src="docs/images/designs/fluent.png" width="200" alt="Fluent design"><br><b>Fluent</b></td>
+    <td align="center" valign="top"><img src="docs/images/designs/tiles.png" width="200" alt="Kacheln design"><br><b>Kacheln</b></td>
+    <td align="center" valign="top"><img src="docs/images/designs/terminal.png" width="200" alt="Terminal design"><br><b>Terminal</b></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><img src="docs/images/designs/focus.png" width="200" alt="Fokus design"><br><b>Fokus</b></td>
+    <td align="center" valign="top"><img src="docs/images/designs/light.png" width="200" alt="Hell design"><br><b>Hell</b></td>
+    <td align="center" valign="top"><img src="docs/images/designs/classic.png" width="200" alt="Klassisch design"><br><b>Klassisch</b><br><sub>Legacy</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+Under "Funktionen" (Features), three optional views work with every design and can be combined:
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="docs/images/designs/feature-pace.png" width="200" alt="Pace feature"><br><b>Verbrauchstempo (Pace)</b><br><sub>Fokus design</sub></td>
+    <td align="center" valign="top"><img src="docs/images/designs/feature-timeline.png" width="200" alt="Reset timeline feature"><br><b>Reset-Zeitleiste</b><br><sub>Kompakt design</sub></td>
+    <td align="center" valign="top"><img src="docs/images/designs/feature-ranked.png" width="200" alt="Sort by usage feature"><br><b>Nach Auslastung sortieren</b><br><sub>Hell design, with pace</sub></td>
+  </tr>
+</table>
+
+- **Pace:** the vertical marker shows how much of the limit's time window has passed. A fill to the right of the marker means usage is ahead of time; the arrow warns when the limit would run out before the reset.
+- **Reset timeline:** shows when each limit resets over the next two weeks. A ring marks a limit at 50% or more.
+- **Sort by usage:** one list of all limits from all providers, highest usage first. Values without a percentage, such as Codex credits, follow below.
 
 ## Supported providers
 
@@ -124,6 +158,7 @@ npm run check:providers -- gemini copilot  # Check other CLI/environment credent
 npm run smoke            # Electron with isolated test settings and demo data
 node scripts/smoke.cjs --packaged  # Run the same checks with the built EXE
 npm run preview          # Browser preview at 127.0.0.1:4317, demo data only
+npm run screenshots      # Regenerate the README design gallery in docs/images/designs/
 npm run build            # Build the portable Windows application
 npm run build:installer  # Build the portable app and a Windows x64 installer
 ```
