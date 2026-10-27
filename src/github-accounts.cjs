@@ -1,6 +1,7 @@
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
+const { executable } = require('./platform.cjs');
 
 function validGitHubLogin(value) {
   // Enterprise Managed Users include an underscore before the enterprise shortcode.
@@ -13,7 +14,7 @@ async function runGitHub(args, { env = process.env, run = execFileAsync } = {}) 
   delete cliEnv.GH_TOKEN;
   delete cliEnv.GITHUB_TOKEN;
   delete cliEnv.GH_HOST;
-  return run(process.platform === 'win32' ? 'gh.exe' : 'gh', args, {
+  return run(executable('gh'), args, {
     env: cliEnv, windowsHide: true, timeout: 10000, maxBuffer: 1024 * 1024,
   });
 }

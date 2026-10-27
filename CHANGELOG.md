@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Build and test releases in GitHub Actions: CI runs the unit tests on Windows, Linux and macOS and smoke-tests the packaged Windows app; pushing a version tag creates a draft release with the installer, ZIP and checksums.
+- `npm run build:installer` now also writes the portable ZIP and `SHA256SUMS.txt`.
+- Bundle operating-system differences in `src/platform.cjs`. Cursor sign-in import and Gemini CLI discovery now also know the macOS and Linux locations.
 - Show every design and the optional features as screenshots in the README. `npm run screenshots` regenerates them from sample data.
 - Keep the number and unit of a reset time on one line when the Kacheln warning banner wraps.
 

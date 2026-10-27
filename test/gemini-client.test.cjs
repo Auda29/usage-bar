@@ -16,7 +16,8 @@ test('Gemini public client parameters are read from installed CLI source without
   await fs.mkdir(path.dirname(file), { recursive: true });
   const source = `throw new Error('Must not execute');\nconst OAUTH_CLIENT_ID = 'example-client';\nconst OAUTH_CLIENT_SECRET = 'example-public-parameter';\n`;
   await fs.writeFile(file, source);
-  const options = { home, env: { GEMINI_CLI_DIR: root } };
+  // No system npm folders: a globally installed Gemini CLI must not leak into the test.
+  const options = { home, env: { GEMINI_CLI_DIR: root }, npmRoots: [] };
   assert.deepEqual(await loadGeminiClient(options), { clientId: 'example-client', clientSecret: 'example-public-parameter' });
   assert.equal(await fs.readFile(file, 'utf8'), source);
   await fs.writeFile(file, 'Unexpected CLI format');

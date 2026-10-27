@@ -8,6 +8,7 @@ const { githubAccountToken, validGitHubLogin } = require('./github-accounts.cjs'
 const { loadGeminiClient } = require('./gemini-client.cjs');
 const { renewClaudeSignIn, hasClaudeProfileScope, CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
 const { readOpenCodeEntry } = require('./opencode-credentials.cjs');
+const { executable, cursorStateFile, openCodeDataDirs } = require('./platform.cjs');
 
 async function readJson(file) {
   try {
@@ -27,7 +28,7 @@ function jwtExpiry(token) {
 function validToken(value) { return typeof value === 'string' && value.trim().length > 0 && value.length <= 16384 && !/[\r\n]/.test(value) ? value.trim() : null; }
 
 async function openCodeCredential(provider, env, home) {
-  const bases = [env.OPENCODE_DATA_DIR, path.join(env.XDG_DATA_HOME || path.join(home, '.local', 'share'), 'opencode'), env.APPDATA && path.join(env.APPDATA, 'opencode')].filter(Boolean);
+  const bases = openCodeDataDirs({ env, home });
   const aliases = { claude: ['anthropic', 'claude'], codex: ['openai', 'codex', 'chatgpt'], gemini: ['google', 'google.oauth', 'gemini'], copilot: ['github-copilot', 'copilot'], openrouter: ['openrouter'] };
   for (const base of bases) {
     const modern = await readOpenCodeEntry(base, aliases[provider] || []);
@@ -46,7 +47,7 @@ async function openCodeCredential(provider, env, home) {
 }
 
 async function readCursorCredential({ env = process.env, home = os.homedir() } = {}) {
-  const file = path.join(env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Cursor', 'User', 'globalStorage', 'state.vscdb');
+  const file = cursorStateFile({ env, home });
   let database;
   try {
     // Only read after the user's explicit import action. The editor's database stays untouched.
@@ -61,7 +62,7 @@ async function readCursorCredential({ env = process.env, home = os.homedir() } =
 
 async function githubCliToken() {
   try {
-    const { stdout } = await execFileAsync(process.platform === 'win32' ? 'gh.exe' : 'gh', ['auth', 'token', '--hostname', 'github.com'], { windowsHide: true, timeout: 5000, maxBuffer: 32768 });
+    const { stdout } = await execFileAsync(executable('gh'), ['auth', 'token', '--hostname', 'github.com'], { windowsHide: true, timeout: 5000, maxBuffer: 32768 });
     return validToken(stdout.trim());
   } catch { return null; }
 }

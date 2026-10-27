@@ -10,6 +10,7 @@ const { loadCredential, readCursorCredential } = require('./credentials.cjs');
 const { CredentialVault } = require('./vault.cjs');
 const { listGitHubAccounts, githubAccountLogin } = require('./github-accounts.cjs');
 const { signInClaude, ClaudeSignInError, CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
+const { supportsLoginItems } = require('./platform.cjs');
 const loginItemOptions = { path: process.execPath, args: ['--hidden'] };
 
 const smoke = process.env.USAGE_BAR_SMOKE === '1';
@@ -177,6 +178,9 @@ async function showSetup() {
   return setupWindow;
 }
 
+// Only a packaged app has a stable executable path; Linux has no login item API.
+const canStartAtLogin = () => app.isPackaged && supportsLoginItems();
+
 function buildMenu() {
   trayMenu = Menu.buildFromTemplate([
     { label: 'Usage Bar öffnen', click: showPopup },
@@ -202,8 +206,8 @@ function buildMenu() {
       label: name, type: 'radio', checked: settings.headlineProvider === id,
       click: () => updateSettings({ headlineProvider: id }),
     })) },
-    { label: 'Mit Windows starten', type: 'checkbox', enabled: app.isPackaged,
-      checked: app.isPackaged && app.getLoginItemSettings(loginItemOptions).openAtLogin,
+    { label: 'Mit Windows starten', type: 'checkbox', enabled: canStartAtLogin(),
+      checked: canStartAtLogin() && app.getLoginItemSettings(loginItemOptions).openAtLogin,
       click: (item) => app.setLoginItemSettings({ ...loginItemOptions, openAtLogin: item.checked }),
     },
     { type: 'separator' },

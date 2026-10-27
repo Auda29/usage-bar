@@ -1,0 +1,89 @@
+name: Release
+
+# Push a tag like v1.2.2 on main whose version matches package.json and has a CHANGELOG.md section.
+# The build job tests and packages the Windows release with read-only access; the publish job,
+# which installs and runs nothing from npm, creates a draft GitHub release. Review it, then publish.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Check tag, branch, package version and changelog
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME is not on main"
+            exit 1
+          fi
+          mkdir -p "dist/release-$GITHUB_REF_NAME"
+          node scripts/release-notes.cjs "$GITHUB_REF_NAME" > "dist/release-$GITHUB_REF_NAME/notes.md"
+      - run: npm ci
+      - run: npm test
+      - name: Build app, installer, ZIP and checksums
+        run: npm run build:installer
+      - name: Smoke test the packaged app
+        run: node scripts/smoke.cjs --packaged
+      - name: Keep release files
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+          if-no-files-found: error
+          path: |
+            dist/release-${{ github.ref_name }}/Usage-Bar-*-windows-x64-Setup.exe
+            dist/release-${{ github.ref_name }}/Usage-Bar-*-windows-x64.zip
+            dist/release-${{ github.ref_name }}/SHA256SUMS.txt
+            dist/release-${{ github.ref_name }}/notes.md
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: release
+      - name: Create the draft release, or refresh an existing draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          files=("release/Usage-Bar-v$version-windows-x64-Setup.exe" "release/Usage-Bar-v$version-windows-x64.zip" "release/SHA256SUMS.txt")
+          prerelease=()
+          if [[ "$version" == *-* ]]; then prerelease=(--prerelease); fi
+          if draft=$(gh release view "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --json isDraft -q .isDraft 2> /dev/null); then
+            if [ "$draft" != "true" ]; then
+              echo "::error::Release $GITHUB_REF_NAME is already published; its files are not replaced."
+              exit 1
+            fi
+            gh release upload "$GITHUB_REF_NAME" "${files[@]}" -R "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --notes-file release/notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" "${files[@]}" -R "$GITHUB_REPOSITORY" --draft --verify-tag \
+              "${prerelease[@]}" --title "Usage Bar $GITHUB_REF_NAME" --notes-file release/notes.md
+          fi
