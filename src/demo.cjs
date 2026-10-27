@@ -10,7 +10,7 @@ function demoProviders(now = Date.now()) {
     ] },
     { id: 'gemini', name: 'Gemini', status: 'ok', fetchedAt: now, rows: [
       { key: 'pro', label: 'gemini-pro', usedPercent: 24, resetAt: now + 8 * 3600000, windowSeconds: 86400 },
-      { key: 'flash', label: 'gemini-flash', usedPercent: 8, resetAt: now + 8 * 3600000, windowSeconds: 86400 },
+      { key: 'flash', label: 'gemini-flash', usedPercent: 8, resetAt: now + 45 * 60000, windowSeconds: 86400 },
     ] },
     { id: 'copilot', name: 'GitHub Copilot', status: 'ok', fetchedAt: now, rows: [
       { key: 'credits', label: 'AI Credits', usedPercent: 35, resetAt: now + 10 * 86400000, windowSeconds: null },

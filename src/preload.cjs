@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('usageBar', {
   selectCopilotAccount: (selection) => ipcRenderer.invoke('usage:copilot-account', selection),
   refresh: () => ipcRenderer.invoke('usage:refresh'),
   setExpanded: (expanded) => ipcRenderer.invoke('usage:expanded', expanded),
+  setDisplayMode: (mode) => ipcRenderer.invoke('usage:display-mode', mode),
   setHeight: (height) => ipcRenderer.send('usage:height', height),
   hide: () => ipcRenderer.send('usage:hide'),
   showMenu: () => ipcRenderer.send('usage:menu'),

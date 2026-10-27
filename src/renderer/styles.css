@@ -18,7 +18,9 @@
 body { margin: 0; user-select: none; overflow: hidden; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 1px solid #a3cdfe; outline-offset: -1px; border-radius: 4px; }
-.usage-panel { padding: 8px; width: 100%; max-height: 100vh; overflow-y: auto; scrollbar-width: thin; }
+/* Scrolling is opt-in so a sub-pixel rounding of the window height never shows a scrollbar. */
+.usage-panel { padding: 8px; width: 100%; max-height: 100vh; overflow-y: hidden; scrollbar-width: thin; }
+.usage-panel.scrollable { overflow-y: auto; }
 .section-heading { display: flex; gap: 4px; height: 24px; margin-bottom: 2px; align-items: center; }
 .section-toggle { display: flex; flex: 1; min-width: 0; gap: 6px; align-items: center; border: 0; background: none; padding: 0 4px; height: 24px; text-align: left; }
 h1 { font-size: 12px; font-weight: 600; margin: 0; line-height: 18px; }
@@ -32,7 +34,7 @@ h1 { font-size: 12px; font-weight: 600; margin: 0; line-height: 18px; }
 .section-toggle[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
 .usage-row { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px; color: var(--muted); }
 .provider-heading { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px; margin: 0; font-size: 13px; font-weight: 600; }
-.provider-logo { width: 14px; height: 14px; flex: 0 0 14px; filter: invert(1); object-fit: contain; }
+.provider-logo { width: 14px; height: 14px; flex: 0 0 14px; filter: var(--logo-filter, invert(1)); object-fit: contain; }
 .row-label { display: flex; align-items: baseline; flex: 1; min-width: 0; gap: 6px; }
 .window-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .reset-label { font-size: 11px; white-space: nowrap; flex-shrink: 0; color: var(--muted); }

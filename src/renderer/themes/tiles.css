@@ -1,0 +1,40 @@
+/* Kacheln: two-column provider tiles with a ring gauge for each provider's main limit. */
+:root[data-theme="tiles"] {
+  --background: #111118; --foreground: #ecebf5; --muted: #8c8ca3; --icon: #8c8ca3; --card: #16161f;
+  --accent: #9d9cf5; --warning: #fcc44d; --error: #ff7a7a; --hairline: rgba(255, 255, 255, .06); --chip: #22222d;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+:root[data-theme="tiles"] .usage-panel { padding: 10px; }
+:root[data-theme="tiles"] h1 { font-size: 14px; font-weight: 700; }
+:root[data-theme="tiles"] .mode-switch { display: flex; border-radius: 99px; background: #1c1c27; }
+:root[data-theme="tiles"] .mode-switch button { border-radius: 99px; }
+:root[data-theme="tiles"] .mode-switch button[aria-pressed="true"] { background: var(--foreground); color: var(--background); font-weight: 600; }
+:root[data-theme="tiles"] .alert { display: block; }
+:root[data-theme="tiles"] #providers:not(.ranked) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+:root[data-theme="tiles"] .provider { min-width: 0; padding: 7px 9px 6px; border: 1px solid color-mix(in srgb, var(--brand, #888) 22%, #23232f); border-radius: 11px; background: linear-gradient(160deg, color-mix(in srgb, var(--brand, #888) 16%, var(--card)) 0%, var(--card) 65%); }
+:root[data-theme="tiles"] #providers.ranked .ranked-list,
+:root[data-theme="tiles"] #providers.ranked .ranked-values { padding: 4px 9px; border: 1px solid #23232f; border-radius: 11px; background: var(--card); }
+:root[data-theme="tiles"] #providers.ranked .provider { margin-top: 6px; }
+:root[data-theme="tiles"] .provider-heading { height: 20px; padding: 0; gap: 6px; font-size: 11.5px; white-space: nowrap; overflow: hidden; }
+:root[data-theme="tiles"] .provider-name { overflow: hidden; text-overflow: ellipsis; }
+:root[data-theme="tiles"] .provider-status { padding: 4px 0; font-size: 11px; }
+:root[data-theme="tiles"] #providers:not(.ranked) .usage-row { padding: 3px 0; font-size: 10.5px; }
+:root[data-theme="tiles"] #providers:not(.ranked) .usage-row:not(.primary) { border-top: 1px solid var(--hairline); }
+:root[data-theme="tiles"] #providers:not(.ranked) .usage-row:not(.primary) :is(.meter, .reset-relative) { display: none; }
+:root[data-theme="tiles"] .row-value { font-weight: 600; color: var(--foreground); }
+:root[data-theme="tiles"] .row-value.warning { color: var(--warning); }
+:root[data-theme="tiles"] .row-value.error { color: var(--error); }
+:root[data-theme="tiles"] .usage-row.primary { grid-template-columns: 50px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; column-gap: 9px; row-gap: 2px; padding: 7px 0 6px; }
+:root[data-theme="tiles"] .usage-row.primary .meter {
+  display: grid; place-items: center; grid-column: 1; grid-row: 1 / span 2; width: 50px; height: 50px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--card) 79%, transparent 81%), conic-gradient(var(--fill) calc(var(--shown) * 1%), color-mix(in srgb, var(--fill) 15%, transparent) 0);
+}
+:root[data-theme="tiles"] .usage-row.primary .meter::after { content: attr(data-label); font-size: 12.5px; font-weight: 700; color: var(--foreground); }
+:root[data-theme="tiles"] .usage-row.primary :is(.meter-fill, .pace-tick) { display: none; }
+:root[data-theme="tiles"] .usage-row.primary .row-label { grid-column: 2 / 4; grid-row: 1; align-self: end; font-size: 11.5px; font-weight: 600; color: var(--foreground); }
+:root[data-theme="tiles"] .usage-row.primary .reset-relative { grid-column: 2; grid-row: 2; align-self: start; font-size: 10.5px; }
+:root[data-theme="tiles"] .usage-row.primary .reset-relative::before { content: "↻ in "; }
+/* The ring already shows the number; only a pace warning stays visible beside the reset. */
+:root[data-theme="tiles"] .usage-row.primary .row-value { grid-column: 3; grid-row: 2; align-self: start; font-size: 0; }
+:root[data-theme="tiles"] .usage-row.primary .pace-flag { font-size: 12px; margin: 0; }
+:root[data-theme="tiles"] .usage-row.primary.text-value .row-value { grid-column: 1 / -1; grid-row: 3; justify-self: start; font-size: 10.5px; }

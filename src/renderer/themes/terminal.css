@@ -1,0 +1,30 @@
+/* Terminal: monospace ledger with segmented bars and an amber accent on near-black. */
+:root[data-theme="terminal"] {
+  --background: #0e0f0c; --foreground: #f2eedc; --muted: #6e705f; --icon: #ffb454;
+  --accent: #d8d4c3; --warning: #ffb454; --error: #ff6b5b; --hairline: #26271f; --chip: #22231c;
+  font-family: "Cascadia Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace; font-size: 11.5px;
+}
+:root[data-theme="terminal"] .usage-panel { padding: 8px 12px 9px; }
+:root[data-theme="terminal"] .section-heading { height: 28px; margin-bottom: 4px; border-bottom: 1px dashed #34352b; }
+:root[data-theme="terminal"] .timer { display: none; }
+:root[data-theme="terminal"] h1 { font-size: 11.5px; font-weight: 400; color: var(--warning); text-transform: lowercase; }
+:root[data-theme="terminal"] h1::before { content: "▍"; }
+:root[data-theme="terminal"] .headline { font-size: 11px; }
+:root[data-theme="terminal"] .provider-heading { height: 22px; margin-top: 6px; padding: 0 2px; gap: 6px; font-size: 10.5px; letter-spacing: .6px; text-transform: uppercase; }
+:root[data-theme="terminal"] .provider-heading::after { content: ""; flex: 1; border-bottom: 1px solid var(--hairline); }
+:root[data-theme="terminal"] .provider-heading .provider-logo { width: 11px; height: 11px; flex-basis: 11px; }
+:root[data-theme="terminal"] .usage-row { height: 20px; grid-template-columns: minmax(0, 1fr) 80px 38px 40px; color: #a9a593; }
+:root[data-theme="terminal"] .window-label { text-transform: lowercase; }
+:root[data-theme="terminal"] .row-provider { text-transform: uppercase; font-size: 10.5px; }
+:root[data-theme="terminal"] .meter { height: 8px; border-radius: 0; background: repeating-linear-gradient(90deg, var(--chip) 0 6px, transparent 6px 8px); }
+:root[data-theme="terminal"] .meter-fill { border-radius: 0; mask-image: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px); }
+:root[data-theme="terminal"] .pace-tick { background: var(--warning); }
+:root[data-theme="terminal"] .row-value { color: var(--foreground); }
+:root[data-theme="terminal"] .row-value.warning { color: var(--warning); }
+:root[data-theme="terminal"] .row-value.error { color: var(--error); }
+:root[data-theme="terminal"] .reset-relative { font-size: 10.5px; }
+:root[data-theme="terminal"] .timeline { border-bottom: 1px dashed #34352b; }
+:root[data-theme="terminal"] .ranked-values { border-top: 1px dashed #34352b; }
+:root[data-theme="terminal"] #providers.ranked .usage-row { grid-template-columns: minmax(0, 1fr) 48px 38px 40px; }
+:root[data-theme="terminal"] .footer { display: flex; border-top: 1px dashed #34352b; }
+:root[data-theme="terminal"] .tl-chip { border-radius: 2px; }
