@@ -1,0 +1,97 @@
+/* Shared markup for meters, pace, ranking, the reset timeline and the optional hero.
+   Every design consumes these through its CSS variables; themes/*.css only restyle. */
+:root { --accent: #6ba6f5; --hairline: rgba(255, 255, 255, .08); --chip: #2a2d35; --card: transparent; }
+[data-provider="claude"] { --brand: #d97757; }
+[data-provider="codex"] { --brand: #3fbf95; }
+[data-provider="gemini"] { --brand: #7c8cff; }
+[data-provider="copilot"] { --brand: #b083f0; }
+[data-provider="cursor"] { --brand: #cfd3dc; }
+[data-provider="openrouter"] { --brand: #7a7cf5; }
+
+/* Meter: the fill carries severity, the track is a light step of the same color. */
+.meter { --fill: var(--accent); position: relative; height: 4px; border-radius: 0 2px 2px 0; background: color-mix(in srgb, var(--fill) 20%, var(--background)); }
+.meter.warning { --fill: var(--warning); }
+.meter.error { --fill: var(--error); }
+.meter-fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--fill); }
+.pace-tick { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--foreground); box-shadow: 0 0 0 1px var(--background); }
+.pace-flag { color: var(--warning); font-weight: 700; margin-right: 4px; }
+.reset-relative { display: none; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.reset-relative.due::before { content: "" !important; }
+
+/* Ranking: rows carry their provider because sections are gone. */
+.row-provider { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; color: var(--foreground); font-weight: 600; }
+.row-provider .provider-logo { width: 12px; height: 12px; flex-basis: 12px; }
+.row-provider .stale-indicator { margin-left: 0; }
+.ranked-values { margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--hairline); }
+
+/* Classic keeps single-line rows; a meter only appears to carry the pace marker. */
+:root[data-theme="classic"] .meter { display: none; }
+:root[data-theme="classic"] .usage-row.has-pace { flex-wrap: wrap; height: auto; padding: 6px 4px 8px; row-gap: 6px; }
+:root[data-theme="classic"] .usage-row.has-pace .meter { display: block; flex-basis: 100%; }
+
+/* Stacked rows: label, reset and value on one line, the meter below. */
+:root:is([data-theme="fluent"], [data-theme="tiles"], [data-theme="focus"], [data-theme="light"]) .usage-row {
+  display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto; align-items: baseline;
+  column-gap: 6px; row-gap: 5px; height: auto; padding: 4px 0 6px;
+}
+:root:is([data-theme="fluent"], [data-theme="tiles"], [data-theme="focus"], [data-theme="light"]) .usage-row .reset-label { display: none; }
+:root:is([data-theme="fluent"], [data-theme="tiles"], [data-theme="focus"], [data-theme="light"]) .usage-row .reset-relative { display: block; grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+:root:is([data-theme="fluent"], [data-theme="tiles"], [data-theme="focus"], [data-theme="light"]) .usage-row .row-value { grid-column: 3; grid-row: 1; }
+:root:is([data-theme="fluent"], [data-theme="tiles"], [data-theme="focus"], [data-theme="light"]) .usage-row .meter { grid-column: 1 / -1; }
+
+/* Column rows: label | meter | value | reset, like a table. */
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 60px 40px 44px; align-items: center; column-gap: 7px; height: 24px; padding: 0 2px;
+}
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row .reset-label { display: none; }
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row .row-label { grid-column: 1; grid-row: 1; }
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row .meter { grid-column: 2; grid-row: 1; }
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row .row-value { grid-column: 3; grid-row: 1; justify-self: end; }
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row .reset-relative { display: block; grid-column: 4; grid-row: 1; text-align: right; }
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row.text-value .meter { display: none; }
+:root:is([data-theme="terminal"], [data-theme="compact"]) .usage-row.text-value .row-value { grid-column: 2 / 4; }
+
+/* Data-viz designs never color the number; a status glyph sits beside it instead. */
+:root:is([data-theme="focus"], [data-theme="light"], [data-theme="compact"]) .row-value:is(.warning, .error) { color: var(--foreground); }
+:root:is([data-theme="focus"], [data-theme="light"], [data-theme="compact"]) .row-value.warning::before { content: "▲"; color: var(--warning); font-size: 9px; margin-right: 4px; vertical-align: 1px; }
+:root:is([data-theme="focus"], [data-theme="light"], [data-theme="compact"]) .row-value.error::before { content: "▲"; color: var(--error); font-size: 9px; margin-right: 4px; vertical-align: 1px; }
+
+/* Hero, display switch, alert and footer stay hidden unless a design opts in. */
+.hero, .alert, .footer { display: none; }
+.mode-switch { display: none; gap: 2px; margin: 2px 0 8px; padding: 2px; border-radius: 6px; background: rgba(0, 0, 0, .25); }
+.mode-switch button { flex: 1; border: 0; background: none; padding: 3px 0; border-radius: 4px; font-size: 11px; color: var(--muted); }
+.mode-switch button[aria-pressed="true"] { background: rgba(255, 255, 255, .1); color: var(--foreground); }
+.hero { padding: 2px 4px 10px; }
+.hero-eyebrow { font-size: 11px; color: var(--muted); }
+.hero-who { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 12px; font-weight: 600; }
+.hero-value { font-size: 48px; font-weight: 600; line-height: 1.05; letter-spacing: -1px; margin: 4px 0; }
+.hero-value.text { font-size: 26px; letter-spacing: 0; }
+.hero-value small { font-size: 20px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.hero-detail { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.hero-detail.ahead::before { content: "↗ "; color: var(--warning); font-weight: 700; }
+.hero .meter { height: 8px; border-radius: 0 4px 4px 0; }
+.hero-legend { display: flex; gap: 14px; margin-top: 8px; font-size: 10.5px; color: var(--muted); }
+.legend-fill::before { content: ""; display: inline-block; width: 12px; height: 6px; margin-right: 5px; border-radius: 0 3px 3px 0; background: var(--accent); vertical-align: middle; }
+.legend-tick::before { content: ""; display: inline-block; width: 2px; height: 10px; margin-right: 5px; background: var(--foreground); vertical-align: middle; }
+.alert { margin: 0 0 8px; padding: 8px 10px; border-radius: 10px; font-size: 11.5px; line-height: 16px; background: linear-gradient(90deg, color-mix(in srgb, var(--warning) 16%, transparent), color-mix(in srgb, var(--warning) 4%, transparent)); }
+.alert::before { content: "▲ "; color: var(--warning); }
+.footer { justify-content: space-between; margin: 8px 2px 0; padding-top: 7px; border-top: 1px solid var(--hairline); font-size: 10.5px; color: var(--muted); }
+
+/* Reset timeline: the first 24 hours take 30 % of the axis, the rest spans two weeks. */
+.timeline { margin: 2px 4px 8px; padding-bottom: 4px; border-bottom: 1px solid var(--hairline); }
+.timeline-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.timeline-title { margin: 0; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.timeline-next { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--muted); }
+.timeline-track { position: relative; height: 78px; margin: 0 14px; }
+.tl-axis { position: absolute; left: 0; right: 0; top: 58px; height: 1px; background: color-mix(in srgb, var(--muted) 50%, transparent); }
+.tl-now { position: absolute; left: 0; top: 54px; width: 9px; height: 9px; margin-left: -4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--background); }
+.tl-break { position: absolute; top: 53px; width: 6px; height: 11px; margin-left: -3px; background: var(--background); border-inline: 1px solid color-mix(in srgb, var(--muted) 50%, transparent); transform: skewX(-20deg); }
+.tl-tick { position: absolute; top: 66px; transform: translateX(-50%); white-space: nowrap; font-size: 10px; line-height: 12px; color: var(--muted); }
+.tl-stem { position: absolute; width: 1px; background: color-mix(in srgb, var(--muted) 50%, transparent); }
+.tl-stem.lane-0 { top: 22px; height: 36px; }
+.tl-stem.lane-1 { top: 48px; height: 10px; }
+.tl-chip { position: absolute; display: grid; place-items: center; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--chip); box-shadow: 0 0 0 2px var(--background); }
+.tl-chip.lane-0 { top: 0; }
+.tl-chip.lane-1 { top: 26px; }
+.tl-chip.warning { box-shadow: 0 0 0 2px var(--background), 0 0 0 3.5px var(--warning); }
+.tl-chip .provider-logo { width: 11px; height: 11px; flex-basis: 11px; }

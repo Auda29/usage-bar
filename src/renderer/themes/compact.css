@@ -1,0 +1,15 @@
+/* Kompakt: dense table rows with mini meters; pairs well with the reset timeline. */
+:root[data-theme="compact"] {
+  --background: #161716; --foreground: #f0efec; --muted: #898781; --icon: #898781;
+  --accent: #3987e5; --warning: #fab219; --error: #d03b3b; --hairline: #2c2c2a; --chip: #2c2c2a;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 12px;
+}
+:root[data-theme="compact"] .usage-panel { padding: 8px 10px; }
+:root[data-theme="compact"] .provider-heading { height: 24px; margin-top: 2px; padding: 0 2px; font-size: 11px; color: var(--muted); }
+:root[data-theme="compact"] .usage-row { height: 26px; border-radius: 4px; color: var(--foreground); }
+:root[data-theme="compact"] .usage-row:hover { background: rgba(255, 255, 255, .04); }
+:root[data-theme="compact"] .row-provider { font-weight: 400; }
+:root[data-theme="compact"] .row-provider + .window-label { color: var(--muted); }
+:root[data-theme="compact"] .meter { height: 6px; border-radius: 0 3px 3px 0; }
+:root[data-theme="compact"] .row-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+:root[data-theme="compact"] .footer { display: flex; }

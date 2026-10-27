@@ -1,0 +1,19 @@
+/* Fokus: calm data-viz palette with one large value for the limit that matters most. */
+:root[data-theme="focus"] {
+  --background: #1a1a19; --foreground: #f0efec; --muted: #898781; --icon: #898781; --secondary: #c3c2b7;
+  --accent: #3987e5; --warning: #fab219; --error: #d03b3b; --hairline: #2c2c2a; --chip: #2c2c2a;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+:root[data-theme="focus"] .usage-panel { padding: 10px 14px; }
+:root[data-theme="focus"][data-hero] .headline { display: none; }
+:root[data-theme="focus"] .hero { display: block; margin-bottom: 4px; padding: 2px 0 10px; border-bottom: 1px solid var(--hairline); }
+:root[data-theme="focus"] .hero-value { font-size: 52px; }
+:root[data-theme="focus"] .hero-who { color: var(--secondary); }
+:root[data-theme="focus"] .hero-detail { color: var(--secondary); }
+:root[data-theme="focus"] .provider-heading { height: 26px; margin-top: 4px; padding: 0; font-size: 11.5px; color: var(--secondary); }
+:root[data-theme="focus"] .usage-row { font-size: 12.5px; color: var(--foreground); }
+:root[data-theme="focus"] .meter { height: 6px; border-radius: 0 3px 3px 0; }
+:root[data-theme="focus"] .reset-relative::before { content: "in "; }
+:root[data-theme="focus"] .pace-tick { background: var(--secondary); }
+:root[data-theme="focus"] .timeline { margin-inline: 0; }
+:root[data-theme="focus"] .footer { display: flex; }

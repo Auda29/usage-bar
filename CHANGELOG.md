@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add a "Design" tray submenu with seven popup designs: Klassisch (unchanged default), Fluent, Kacheln, Terminal, Fokus, Hell and Kompakt. The window background follows the selected design.
+- Add a "Funktionen" tray submenu with optional views for every design: usage pace with a projected run-out warning, a two-week reset timeline, and a single list of all limits sorted by usage.
+- Fluent, Kacheln and Hell include a used/remaining switch in the popup.
+- The smoke test now switches through every design with all features on and off, and tolerates sub-pixel row and window heights on scaled displays.
+
 ## 1.1.6 - 2026-10-27
 
 - Keep "Mit Windows starten" checked when changing display mode, provider selection, the headline provider, or the expanded view. Read the Windows startup registration using the same executable path and `--hidden` argument used when enabling startup.

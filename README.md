@@ -53,6 +53,11 @@ The interface currently uses German labels; their English meanings are included 
 - Click the refresh button or press F5 to update the values. Updates also run automatically every 3 minutes.
 - Press Escape, click outside the window, or click the tray icon again to close the view.
 - Right-click to open the menu with provider selection, used/remaining display, header status, and optional startup with Windows.
+- Under "Design", pick one of seven looks: Klassisch (the original), Fluent, Kacheln (tiles), Terminal, Fokus, Hell (light) and Kompakt (compact).
+- Under "Funktionen" (Features), turn on optional views that work with every design:
+  - **Verbrauchstempo (Pace):** marks how much of each limit's time window has passed. A warning arrow appears when usage at the current rate would hit 100% before the reset. Limits without a reported window length, such as GitHub Copilot and Cursor, show no pace marker.
+  - **Reset-Zeitleiste (Reset timeline):** shows when each limit resets over the next two weeks. The first 24 hours take up more of the axis.
+  - **Nach Auslastung sortieren (Sort by usage):** lists all limits from all providers in one list, highest usage first.
 - Under "Provider anzeigen" (Show providers), check each service you want. "Provider einrichten…" (Set up providers) opens the sign-in settings and the same provider checkboxes.
 - Choose "Beenden" (Quit) in the tray menu to exit the app.
 
@@ -94,7 +99,7 @@ Under "Provider einrichten…" (Set up providers), use "GitHub-Konto für Usage 
 
 Manually saved tokens are stored under `%APPDATA%/usage-bar/credentials/` and encrypted with Windows DPAPI through Electron's `safeStorage`. Saved values are never loaded back into input fields. "Gespeicherte Anmeldung entfernen" (Remove saved sign-in) deletes only Usage Bar's entry; existing CLI or editor sign-ins remain intact. Manually saved tokens take precedence over automatically discovered sources. The app refuses to save tokens if Windows encryption is unavailable.
 
-Percentages show the **used** quota by default. Select "Verbleibend" (Remaining) in the tray menu to switch the display. Warning colors reflect usage: yellow at 50% and red at 80%. Codex credits are a credit count, not a dollar amount. Reset times use the local time zone.
+Percentages show the **used** quota by default. Select "Verbleibend" (Remaining) in the tray menu, or in the switch shown by the Fluent, Kacheln and Hell designs, to switch the display. Warning colors reflect usage: yellow at 50% and red at 80%. Codex credits are a credit count, not a dollar amount. Reset times use the local time zone.
 
 On network errors, the last successful values remain visible with an error message and timestamp. Switching accounts discards old values. Rate limits respect `Retry-After`; manual refresh does not bypass the waiting period. The cache is kept in memory only.
 

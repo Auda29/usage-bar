@@ -1,118 +1,92 @@
 /* The browser preview uses the same renderer with explicit demo data only. */
 const api = window.usageBar;
-const elements = Object.fromEntries(['toggle', 'refresh', 'headline', 'providers', 'demo-note'].map((id) => [id, document.getElementById(id)]));
-let state = { providers: [], loading: true, settings: { expanded: true, displayMode: 'usage', providers: ['claude', 'codex'], headlineProvider: 'claude' } };
+const views = window.UsageViews;
+const elements = Object.fromEntries(['toggle', 'refresh', 'headline', 'providers', 'demo-note', 'mode-switch', 'hero', 'alert', 'timeline', 'footer'].map((id) => [id, document.getElementById(id)]));
+let state = { providers: [], loading: true, settings: { expanded: true, displayMode: 'usage', providers: ['claude', 'codex'], headlineProvider: 'claude', theme: 'classic' } };
 
-function make(tag, className, text) {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  if (text !== undefined) element.textContent = text;
-  return element;
+function headlineEntry() {
+  const selected = state.providers.find((provider) => provider.id === state.settings.headlineProvider && state.settings.providers.includes(provider.id));
+  const candidates = (selected?.rows ?? []).filter((row) => row.windowSeconds > 0 && typeof row.usedPercent === 'number');
+  const row = candidates.reduce((best, item) => !best || item.windowSeconds < best.windowSeconds ? item : best, null) ?? selected?.rows?.[0];
+  return row ? { provider: selected, row } : null;
 }
 
-function displayedPercent(row) {
-  if (typeof row.usedPercent !== 'number' || !Number.isFinite(row.usedPercent)) return null;
-  return Math.round(state.settings.displayMode === 'remaining' ? 100 - row.usedPercent : row.usedPercent);
+function renderHeadline(ctx, entry) {
+  elements.headline.replaceChildren();
+  if (entry) {
+    const { provider, row } = entry;
+    elements.headline.append(views.make('span', 'headline-label', row.label), views.make('span', views.toneOf(row), views.valueOf(ctx, row)));
+    elements.headline.title = `${provider.name}: ${state.settings.displayMode === 'remaining' ? 'verbleibend' : 'verbraucht'}${provider.status === 'stale' ? ' · Daten veraltet' : ''}`;
+  } else {
+    elements.headline.textContent = state.loading ? 'Lädt…' : state.settings.displayMode === 'remaining' ? 'Verbleibend' : 'Verbraucht';
+    elements.headline.title = '';
+  }
 }
 
-function valueOf(row) {
-  const percent = displayedPercent(row);
-  return (state.settings.displayMode === 'remaining' ? row.remainingValueLabel ?? row.valueLabel : row.valueLabel) ?? (percent === null ? '—' : `${percent}%`);
+function visibleProviders() {
+  return state.settings.providers.map((id) => state.providers.find((provider) => provider.id === id)
+    ?? { id, name: state.catalog?.find((provider) => provider.id === id)?.name || id, rows: [], status: 'loading' });
 }
 
-function toneOf(row) {
-  return row.usedPercent >= 80 ? 'error' : row.usedPercent >= 50 ? 'warning' : '';
+function renderProviders(ctx, providers) {
+  const ranked = Boolean(state.settings.sortByUsage) && providers.length > 0;
+  elements.providers.classList.toggle('ranked', ranked);
+  elements.providers.replaceChildren(...(ranked ? views.rankedView(ctx, providers) : providers.map((provider) => views.providerSection(ctx, provider))));
+  if (!providers.length) elements.providers.append(views.make('p', 'provider-status', 'Provider über das Tray-Menü auswählen.'));
 }
 
-function resetLabel(timestamp) {
-  if (!timestamp) return '';
-  const date = new Date(timestamp);
-  if (!Number.isFinite(date.getTime())) return '';
-  const sameDay = date.toDateString() === new Date().toDateString();
-  return new Intl.DateTimeFormat(undefined, sameDay
-    ? { hour: 'numeric', minute: '2-digit' }
-    : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
+function renderExtras(ctx, providers, entry, expanded) {
+  const fill = (element, parts) => { element.replaceChildren(...parts); element.hidden = !expanded || !parts.length; };
+  fill(elements.hero, views.heroView(ctx, providers, entry));
+  fill(elements.timeline, state.settings.showTimeline ? views.timelineView(ctx, providers) : []);
+  const alert = views.alertText(ctx, providers);
+  fill(elements.alert, alert ? [alert] : []);
+  // The oldest reading is the honest one; a single fresh provider must not hide a stale one.
+  const fetched = providers.map((provider) => provider.fetchedAt).filter(Boolean);
+  const stale = providers.some((provider) => provider.status === 'stale') ? ' · teils veraltet' : '';
+  const stamp = fetched.length ? `Stand ${new Date(Math.min(...fetched)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${stale}` : state.loading ? 'Lädt…' : '';
+  fill(elements.footer, [views.make('span', '', stamp), views.make('span', '', 'F5 · Esc')]);
+  elements['mode-switch'].hidden = !expanded;
+  // Designs with a hero hide the header status only while the hero replaces it.
+  document.documentElement.toggleAttribute('data-hero', !elements.hero.hidden);
+  for (const button of elements['mode-switch'].querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.mode === state.settings.displayMode));
+}
+
+function applyDocumentFlags(settings) {
+  const root = document.documentElement;
+  root.dataset.theme = settings.theme || 'classic';
+  root.toggleAttribute('data-pace', Boolean(settings.showPace));
 }
 
 function render(next) {
   state = next;
-  const expanded = state.settings.expanded;
+  const { settings } = state;
+  const expanded = settings.expanded;
+  const ctx = { state, settings, now: Date.now(), api };
+  applyDocumentFlags(settings);
   elements.toggle.setAttribute('aria-expanded', String(expanded));
   elements.providers.hidden = !expanded;
   elements.providers.setAttribute('aria-busy', String(state.loading));
   elements.refresh.disabled = state.loading;
   elements['demo-note'].hidden = !state.demo || !expanded;
-  elements.headline.replaceChildren();
-  const selected = state.providers.find((provider) => provider.id === state.settings.headlineProvider && state.settings.providers.includes(provider.id));
-  const candidates = (selected?.rows ?? []).filter((row) => row.windowSeconds > 0 && typeof row.usedPercent === 'number');
-  const headlineRow = candidates.reduce((best, row) => !best || row.windowSeconds < best.windowSeconds ? row : best, null) ?? selected?.rows?.[0];
-  if (headlineRow) {
-    elements.headline.append(make('span', 'headline-label', headlineRow.label), make('span', toneOf(headlineRow), valueOf(headlineRow)));
-    elements.headline.title = `${selected.name}: ${state.settings.displayMode === 'remaining' ? 'verbleibend' : 'verbraucht'}${selected.status === 'stale' ? ' · Daten veraltet' : ''}`;
-  } else {
-    elements.headline.textContent = state.loading ? 'Lädt…' : state.settings.displayMode === 'remaining' ? 'Verbleibend' : 'Verbraucht';
-    elements.headline.title = '';
-  }
-  elements.providers.replaceChildren();
-  const visibleProviders = state.settings.providers.map((id) => state.providers.find((provider) => provider.id === id) ?? { id, name: state.catalog?.find((provider) => provider.id === id)?.name || id, rows: [], status: 'loading' });
-  for (const provider of visibleProviders) {
-    const section = make('section', 'provider');
-    section.setAttribute('aria-label', provider.name);
-    const heading = make('h2', 'provider-heading');
-    const logo = make('img', 'provider-logo');
-    logo.src = `../../assets/${provider.id}.svg`;
-    logo.alt = '';
-    heading.append(logo, make('span', '', provider.name));
-    if (provider.status === 'stale') {
-      const indicator = make('span', 'stale-indicator');
-      indicator.title = 'Letzter erfolgreicher Stand. Aktualisierung fehlgeschlagen.';
-      heading.append(indicator);
-    }
-    section.append(heading);
-    for (const row of provider.rows) {
-      const line = make('div', `usage-row${row.valueLabel ? ' text-value' : ''}`);
-      line.dataset.key = row.key;
-      const label = make('span', 'row-label');
-      const windowLabel = make('span', 'window-label', row.label);
-      windowLabel.title = row.label;
-      label.append(windowLabel);
-      const reset = resetLabel(row.resetAt);
-      if (reset) {
-        const time = make('time', 'reset-label', reset);
-        time.dateTime = new Date(row.resetAt).toISOString();
-        time.title = `Reset: ${new Date(row.resetAt).toLocaleString()}`;
-        label.append(time);
-      }
-      const value = make('span', `row-value ${toneOf(row)}`, valueOf(row));
-      value.title = row.detail || (row.valueLabel ? row.label : `${state.settings.displayMode === 'remaining' ? 'Verbleibend' : 'Verbraucht'}: ${valueOf(row)}`);
-      line.append(label, value);
-      line.title = [provider.fetchedAt ? `Stand: ${new Date(provider.fetchedAt).toLocaleString()}` : '', row.resetAt ? `Reset: ${new Date(row.resetAt).toLocaleString()}` : ''].filter(Boolean).join(' · ');
-      section.append(line);
-    }
-    if (provider.error || !provider.rows.length) {
-      const status = make('p', 'provider-status');
-      const lastGood = provider.status === 'stale' && provider.fetchedAt ? ` Letzter Stand: ${new Date(provider.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : '';
-      status.append(make('span', 'status-message', `${provider.error || (state.loading ? 'Wird geladen…' : 'Keine Limits verfügbar.')}${lastGood}`));
-      if (provider.status !== 'loading') {
-        const link = make('button', 'status-link', 'Einrichten');
-        link.type = 'button';
-        link.addEventListener('click', () => api?.openSetup());
-        status.append(link);
-      }
-      section.append(status);
-    }
-    elements.providers.append(section);
-  }
-  if (!visibleProviders.length) {
-    const empty = make('p', 'provider-status', 'Provider über das Tray-Menü auswählen.');
-    elements.providers.append(empty);
-  }
+  const entry = headlineEntry();
+  renderHeadline(ctx, entry);
+  const providers = visibleProviders();
+  renderProviders(ctx, providers);
+  renderExtras(ctx, providers, entry, expanded);
   document.body.dataset.ready = 'true';
   sizeToContent();
 }
 
 function sizeToContent() {
-  api?.setHeight(Math.ceil(document.querySelector('.usage-panel').scrollHeight));
+  // scrollHeight is rounded and can drop a fraction of a pixel; measure the visible children instead.
+  const panel = document.querySelector('.usage-panel');
+  const top = panel.getBoundingClientRect().top - panel.scrollTop;
+  const bottom = Math.max(0, ...[...panel.children].map((child) => child.getBoundingClientRect().bottom - top));
+  const needed = Math.max(panel.scrollHeight, bottom + parseFloat(getComputedStyle(panel).paddingBottom));
+  // Allow scrolling only when the content is clearly taller than the window (720 px cap or a small screen).
+  panel.classList.toggle('scrollable', needed > window.innerHeight + 1);
+  api?.setHeight(Math.ceil(needed));
 }
 
 elements.toggle.addEventListener('click', () => {
@@ -124,6 +98,12 @@ elements.refresh.addEventListener('click', async () => {
   if (!api) return;
   try { render(await api.refresh()); } catch { elements.refresh.disabled = false; }
 });
+elements['mode-switch'].addEventListener('click', (event) => {
+  const mode = event.target.closest('button')?.dataset.mode;
+  if (!mode || mode === state.settings.displayMode) return;
+  render({ ...state, settings: { ...state.settings, displayMode: mode } });
+  void api?.setDisplayMode(mode);
+});
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') api?.hide();
   if (event.key === 'F5' || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'r')) {
@@ -133,6 +113,7 @@ document.addEventListener('keydown', (event) => {
 });
 document.addEventListener('contextmenu', (event) => { if (api) { event.preventDefault(); api.showMenu(); } });
 new ResizeObserver(sizeToContent).observe(document.querySelector('.usage-panel'));
+window.addEventListener('resize', sizeToContent);
 if (api) {
   api.onState(render);
   void api.getState().then(render);

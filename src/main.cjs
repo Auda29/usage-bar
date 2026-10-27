@@ -5,7 +5,7 @@ const os = require('node:os');
 const { ProviderService } = require('./providers.cjs');
 const { positionPopup } = require('./model.cjs');
 const { demoProviders } = require('./demo.cjs');
-const { PROVIDERS, PROVIDER_IDS, DEFAULT_SETTINGS, normalizeSettings } = require('./catalog.cjs');
+const { PROVIDERS, PROVIDER_IDS, THEMES, FEATURES, DEFAULT_SETTINGS, normalizeSettings } = require('./catalog.cjs');
 const { loadCredential, readCursorCredential } = require('./credentials.cjs');
 const { CredentialVault } = require('./vault.cjs');
 const { listGitHubAccounts, githubAccountLogin } = require('./github-accounts.cjs');
@@ -110,10 +110,15 @@ function hidePopup() {
   }
 }
 
+function themeBackground() {
+  return THEMES.find(({ id }) => id === settings.theme)?.background ?? THEMES[0].background;
+}
+
 function updateSettings(patch) {
   const selectionChanged = patch.providers && JSON.stringify(normalizeSettings({ ...settings, ...patch }).providers) !== JSON.stringify(settings.providers);
   settings = normalizeSettings({ ...settings, ...patch });
   try { saveSettings(); } catch { /* Keep this session usable if the settings directory is read-only. */ }
+  if (popup && !popup.isDestroyed()) popup.setBackgroundColor(themeBackground());
   emitState();
   buildMenu();
   if (selectionChanged) {
@@ -181,6 +186,12 @@ function buildMenu() {
       { label: 'Verbraucht', type: 'radio', checked: settings.displayMode === 'usage', click: () => updateSettings({ displayMode: 'usage' }) },
       { label: 'Verbleibend', type: 'radio', checked: settings.displayMode === 'remaining', click: () => updateSettings({ displayMode: 'remaining' }) },
     ] },
+    { label: 'Design', submenu: THEMES.map(({ id, name }) => ({
+      label: name, type: 'radio', checked: settings.theme === id, click: () => updateSettings({ theme: id }),
+    })) },
+    { label: 'Funktionen', submenu: FEATURES.map(({ key, name }) => ({
+      label: name, type: 'checkbox', checked: settings[key], click: (item) => updateSettings({ [key]: item.checked }),
+    })) },
     { label: 'Provider anzeigen', submenu: PROVIDERS.map(({ id, name }) => ({
       label: name, type: 'checkbox', checked: settings.providers.includes(id),
       click: (item) => updateSettings({ providers: item.checked ? [...settings.providers, id] : settings.providers.filter((key) => key !== id) }),
@@ -284,6 +295,10 @@ function registerIpc() {
     } catch { return { ok: false, error: 'Cursor-Import konnte nicht gespeichert werden.' }; }
   });
   ipcMain.handle('usage:refresh', async (event) => { trusted(event); await refresh(); return state; });
+  ipcMain.handle('usage:display-mode', (event, displayMode) => {
+    trusted(event);
+    if (displayMode === 'usage' || displayMode === 'remaining') updateSettings({ displayMode });
+  });
   ipcMain.handle('usage:expanded', (event, expanded) => {
     trusted(event);
     if (typeof expanded === 'boolean') updateSettings({ expanded });
@@ -311,7 +326,7 @@ async function createApp() {
   popup = new BrowserWindow({
     width: 310, height: desiredHeight, show: false, frame: false, resizable: false,
     maximizable: false, minimizable: false, fullscreenable: false, skipTaskbar: true,
-    alwaysOnTop: true, backgroundColor: '#181b22', title: 'Usage Bar', icon,
+    alwaysOnTop: true, backgroundColor: themeBackground(), title: 'Usage Bar', icon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true,
       nodeIntegration: false, sandbox: true, spellcheck: false,

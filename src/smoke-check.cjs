@@ -50,13 +50,13 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   const full = await read();
   assert.deepEqual(full.headings, ['Claude', 'Codex']);
   assert.equal(full.rows.length, 4);
-  assert(full.rows.every((row) => row.height === 28));
+  assert(full.rows.every((row) => Math.abs(row.height - 28) < 0.05), JSON.stringify(full.rows));
   assert(full.rows.some((row) => row.text.includes('109.0869435')));
   assert.equal(full.headline, '5-Hour20%');
   assert(full.logos, 'Logos must load');
   assert.equal(full.nodeAvailable, false, 'Renderer must not have Node access');
   assert.equal(full.overflowing, false, 'Rows must fit the popup');
-  assert.equal(popup.getContentBounds().height, full.bodyHeight);
+  assert(Math.abs(popup.getContentBounds().height - full.bodyHeight) < 1, `Window height ${popup.getContentBounds().height} must follow content ${full.bodyHeight}`);
   const artifacts = process.env.USAGE_BAR_ARTIFACT_DIR || path.join(app.getAppPath(), 'artifacts');
   fs.mkdirSync(artifacts, { recursive: true });
   fs.writeFileSync(path.join(artifacts, 'usage-bar-demo.png'), (await popup.webContents.capturePage()).toPNG());
@@ -107,7 +107,7 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert.deepEqual(allProviders.headings, PROVIDERS.map(({ name }) => name));
   assert.equal(allProviders.overflowing, false);
   assert(allProviders.logos);
-  assert.equal(popup.getContentBounds().height, allProviders.bodyHeight);
+  assert(Math.abs(popup.getContentBounds().height - allProviders.bodyHeight) < 1, `Window height ${popup.getContentBounds().height} must follow content ${allProviders.bodyHeight}`);
   assertStartup(true);
   const displayChoices = getTrayMenu().items.find(item => item.label === 'Anzeige').submenu.items;
   displayChoices.find(item => item.label === 'Verbleibend').click();
@@ -119,6 +119,9 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   getTrayMenu().items.find(item => item.label === 'Kurzstatus in der Kopfzeile').submenu.items.find(item => item.label === 'Claude').click();
   assertStartup(true);
   fs.writeFileSync(path.join(artifacts, 'usage-bar-all-providers.png'), (await popup.webContents.capturePage()).toPNG());
+  await require('./smoke-themes.cjs').checkThemes({ popup, getTrayMenu, app, artifacts });
+  assertStartup(true);
+  assert.deepEqual((await read()).headings, PROVIDERS.map(({ name }) => name), 'Classic design returns after the theme tour');
   fs.writeFileSync(path.join(artifacts, 'usage-bar-provider-settings.png'), (await setup.webContents.capturePage()).toPNG());
   await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').scrollIntoView({block: 'center'})`);
   fs.writeFileSync(path.join(artifacts, 'usage-bar-copilot-accounts.png'), (await setup.webContents.capturePage()).toPNG());
