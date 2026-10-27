@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 - 2026-10-27
 
 - Add a "Design" tray submenu with seven popup designs: Klassisch (unchanged default), Fluent, Kacheln, Terminal, Fokus, Hell and Kompakt. The window background follows the selected design.
 - Add a "Funktionen" tray submenu with optional views for every design: usage pace with a projected run-out warning, a two-week reset timeline, and a single list of all limits sorted by usage.
