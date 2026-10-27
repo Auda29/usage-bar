@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.1 - 2026-10-27
 
 - Make Kompakt the default design for new installations and for settings without a saved design, including updates from 1.1.6 and earlier.
 - Mark Klassisch as legacy: it is listed last in the "Design" menu as "Klassisch (Legacy)", stays selectable, and may be removed in a future version. An explicitly saved Klassisch choice is kept.

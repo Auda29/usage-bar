@@ -1,6 +1,6 @@
 {
   "name": "usage-bar",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Compact multi-provider AI usage in the Windows notification area.",
   "author": "NiklasW",
