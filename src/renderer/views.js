@@ -49,7 +49,8 @@
   }
 
   function resetPhrase(ms) {
-    return ms > 0 ? `Reset in ${relativeTime(ms)}` : 'Reset fällig';
+    // Keep number and unit together when a sentence wraps ("12 Tg").
+    return ms > 0 ? `Reset in ${relativeTime(ms).replace(' ', '\u00a0')}` : 'Reset fällig';
   }
 
   function paceText(ctx, rowPace) {
