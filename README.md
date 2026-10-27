@@ -30,7 +30,11 @@ Release **v1.1.0** supports all six providers listed above. Release **v1.0.0** s
 
 ## Download
 
-Get the portable Windows version from [Releases](https://github.com/Auda29/usage-bar/releases/latest).
+Get the Windows installer or portable ZIP from [Releases](https://github.com/Auda29/usage-bar/releases/latest).
+
+**Installer:** Download `Usage-Bar-v<version>-windows-x64-Setup.exe` and run it. Setup installs the app for your Windows user without administrator rights, adds a Start menu entry, and starts Usage Bar. Uninstall it through Windows Settings under Apps. Installing an update or uninstalling the app preserves settings and saved provider credentials in `%APPDATA%/usage-bar/`.
+
+**Portable ZIP:**
 
 1. Download the Windows x64 ZIP for the version you want.
 2. Extract the entire ZIP to a permanent folder.
@@ -92,6 +96,8 @@ On network errors, the last successful values remain visible with an error messa
 
 Settings are stored in `%APPDATA%/usage-bar/settings.json`. Startup with Windows is off by default. If you move the portable app folder after enabling startup, turn it off and on again at the new location.
 
+When switching from the portable ZIP to the installer, quit the portable app first. If startup with Windows was enabled, turn it off in the portable app before switching, then enable it in the installed app. Both versions use the same settings and saved provider credentials.
+
 ## Development
 
 Requires Node.js 22.12 or later and Windows 10/11 x64:
@@ -110,7 +116,12 @@ npm run smoke            # Electron with isolated test settings and demo data
 node scripts/smoke.cjs --packaged  # Run the same checks with the built EXE
 npm run preview          # Browser preview at 127.0.0.1:4317, demo data only
 npm run build            # Build the portable Windows application
+npm run build:installer  # Build the portable app and a Windows x64 installer
 ```
+
+The installer and its SHA-256 checksum are written to `dist/release-v<version>/`. The build uses electron-builder's [NSIS target](https://www.electron.build/v26/docs/nsis/) with the existing application ID so later installers update the same installation. For release uploads, attach the Setup EXE alongside the portable ZIP and include both hashes in `SHA256SUMS.txt`. The installer is currently unsigned.
+
+To wrap an already packaged release without rebuilding its application files, run `node scripts/installer.cjs "path/to/Usage Bar-win32-x64"`. Its name and version must match `package.json`.
 
 The smoke test checks the actual Electron tray, IPC, logos, row dimensions, window height, collapsing/expanding, refresh, Escape, all six provider checkboxes, the setup window, and Windows encryption. Screenshots are saved to `artifacts/usage-bar-demo.png`, `artifacts/usage-bar-all-providers.png`, and `artifacts/usage-bar-provider-settings.png`. The browser preview uses the same HTML/CSS/JS files. It does not expose real data or credentials. `check:providers` checks authentication files and environment variables, not the desktop app's encrypted token storage.
 

@@ -25,10 +25,13 @@
     "preview": "node scripts/preview.cjs",
     "smoke": "node scripts/smoke.cjs",
     "icons": "node scripts/icons.cjs",
-    "build": "node scripts/package.cjs"
+    "build": "node scripts/package.cjs",
+    "build:installer": "npm run build && node scripts/installer.cjs"
   },
   "devDependencies": {
+    "@electron/asar": "4.3.1",
     "@electron/packager": "20.3.0",
-    "electron": "45.0.0"
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0"
   }
 }

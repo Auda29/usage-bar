@@ -2,6 +2,7 @@
 
 ## 1.1.4 - 2026-10-26
 
+- Added a Windows x64 installer to this release on 2026-10-27. Setup installs for the current user, adds a Start menu entry, and preserves settings and saved credentials on updates and uninstall.
 - Renew expiring Claude profile sign-ins through the official native Claude CLI instead of falling back to an inference-only environment token after eight hours.
 - Share concurrent renewal requests, throttle failed attempts, and leave the global environment unchanged.
 - Automatic Claude renewal requires native Claude CLI 2.1.310 or later; unsupported or missing CLI installations do not trigger interactive login.
