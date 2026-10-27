@@ -14,15 +14,19 @@ const metadata = require('../package.json');
     throw new Error(`Expected ${metadata.name} ${metadata.version}; found ${packaged.name} ${packaged.version}. Run npm run build first.`);
   }
   const output = path.join(root, 'dist', `release-v${metadata.version}`);
-  const filename = `Usage-Bar-v${metadata.version}-windows-x64-Setup.exe`;
+  const base = `Usage-Bar-v${metadata.version}-windows-x64`;
+  const filename = `${base}-Setup.exe`;
+  const archive = `${base}.zip`;
   await build({
     projectDir: root,
     prepackaged,
-    targets: Platform.WINDOWS.createTarget('nsis', Arch.x64),
+    targets: Platform.WINDOWS.createTarget(['nsis', 'zip'], Arch.x64),
     publish: 'never',
     config: {
       appId: 'dev.usagebar.desktop',
       productName: 'Usage Bar',
+      // electron-builder expands ${ext}; the portable ZIP keeps the app files at the archive root.
+      artifactName: `${base}.\${ext}`,
       directories: { output, buildResources: path.join(root, 'assets') },
       publish: null,
       win: { icon: 'assets/app.ico', executableName: 'Usage Bar', signAndEditExecutable: false },
@@ -40,9 +44,8 @@ const metadata = require('../package.json');
       },
     },
   });
-  const installer = path.join(output, filename);
-  const hash = createHash('sha256').update(fs.readFileSync(installer)).digest('hex');
-  fs.writeFileSync(`${installer}.sha256`, `${hash}  ${filename}\n`);
-  console.log(`Installer: ${installer}`);
-  console.log(`SHA-256: ${hash}`);
+  const sums = [filename, archive].map((name) => `${createHash('sha256').update(fs.readFileSync(path.join(output, name))).digest('hex')}  ${name}`);
+  fs.writeFileSync(path.join(output, 'SHA256SUMS.txt'), `${sums.join('\n')}\n`);
+  console.log(`Release files in ${output}:`);
+  for (const line of sums) console.log(`  ${line}`);
 })().catch((error) => { console.error(error.message); process.exitCode = 1; });

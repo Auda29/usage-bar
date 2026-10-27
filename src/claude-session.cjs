@@ -5,6 +5,7 @@ const { createHash } = require('node:crypto');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
+const { executable } = require('./platform.cjs');
 const pending = new Map();
 const failures = new Map();
 const signIns = new Map();
@@ -30,8 +31,8 @@ function needsRenewal(oauth, now) {
 
 function cliCandidates(home) {
   return [...new Set([
-    process.platform === 'win32' ? 'claude.exe' : 'claude',
-    path.join(home, '.local', 'bin', process.platform === 'win32' ? 'claude.exe' : 'claude'),
+    executable('claude'),
+    path.join(home, '.local', 'bin', executable('claude')),
   ])];
 }
 

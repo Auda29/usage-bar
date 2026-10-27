@@ -1,10 +1,11 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
+const { npmGlobalRoots } = require('./platform.cjs');
 
 // Read the installed CLI's public OAuth client configuration instead of bundling it.
 // Source files are parsed as text and never executed.
-async function loadGeminiClient({ env = process.env, home = os.homedir() } = {}) {
+async function loadGeminiClient({ env = process.env, home = os.homedir(), npmRoots = npmGlobalRoots({ env, home }) } = {}) {
   const clean = (value) => typeof value === 'string' && value.length <= 4096 && value.trim() && !/[\r\n]/.test(value) ? value.trim() : null;
   const clientId = clean(env.GEMINI_OAUTH_CLIENT_ID);
   const clientSecret = clean(env.GEMINI_OAUTH_CLIENT_SECRET);
@@ -13,8 +14,7 @@ async function loadGeminiClient({ env = process.env, home = os.homedir() } = {})
   if (clientId || clientSecret) return null;
   const roots = new Set([
     env.GEMINI_CLI_DIR,
-    path.join(env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'npm', 'node_modules', '@google', 'gemini-cli'),
-    path.join(home, '.npm-global', 'lib', 'node_modules', '@google', 'gemini-cli'),
+    ...npmRoots.map((root) => path.join(root, '@google', 'gemini-cli')),
     ...Object.entries(env).filter(([key]) => key.toLowerCase() === 'path').flatMap(([, value]) => value.split(path.delimiter)).filter(Boolean).flatMap((base) => [
       path.join(base, 'node_modules', '@google', 'gemini-cli'),
       path.resolve(base, '..', 'lib', 'node_modules', '@google', 'gemini-cli'),

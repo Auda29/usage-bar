@@ -4,6 +4,7 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { loadCredential, readCursorCredential } = require('../src/credentials.cjs');
+const { cursorStateFile } = require('../src/platform.cjs');
 
 async function fixture(t) {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'usage-bar-credentials-test-'));
@@ -148,7 +149,8 @@ test('Copilot accepts github.com login only and can fall back to GitHub CLI', as
 test('Cursor desktop credentials are read only after explicit import and the database is unchanged', async (t) => {
   const options = await fixture(t);
   options.env.APPDATA = path.join(options.home, 'roaming');
-  const file = path.join(options.env.APPDATA, 'Cursor', 'User', 'globalStorage', 'state.vscdb');
+  options.env.XDG_CONFIG_HOME = path.join(options.home, 'config');
+  const file = cursorStateFile(options);
   await fs.mkdir(path.dirname(file), { recursive: true });
   const { DatabaseSync } = require('node:sqlite');
   const database = new DatabaseSync(file);

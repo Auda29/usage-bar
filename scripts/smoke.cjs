@@ -11,6 +11,8 @@ const child = spawn(executable, packaged ? ['--show'] : [root, '--show'], {
   cwd: root, windowsHide: true,
   env: childEnv, stdio: 'inherit',
 });
-const timeout = setTimeout(() => { child.kill(); console.error('Smoke test timed out'); process.exitCode = 1; }, 30000);
-child.on('exit', (code) => { clearTimeout(timeout); process.exitCode = code || 0; });
+// The design tour adds a few seconds per design; CI runners are slower than a desktop.
+const timeout = setTimeout(() => { child.kill(); console.error('Smoke test timed out'); process.exitCode = 1; }, 90000);
+// A timeout or a signal is a failure; never let the exit event overwrite an earlier one.
+child.on('exit', (code, signal) => { clearTimeout(timeout); if (!process.exitCode) process.exitCode = signal ? 1 : (code ?? 1); });
 child.on('error', (error) => { clearTimeout(timeout); console.error(error.message); process.exitCode = 1; });
