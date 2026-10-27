@@ -63,6 +63,11 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert.deepEqual(accountOptions, ['automatic', 'github-cli:usagebar-personal', 'github-cli:usagebar-work']);
   assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').value`), 'automatic');
   assert.equal(await setup.webContents.executeJavaScript(`document.querySelector('label[for="copilot-account"]').textContent`), 'GitHub-Konto für Usage Bar');
+  assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('claude-sign-in').textContent`), 'Mit Claude Code anmelden');
+  await setup.webContents.executeJavaScript(`document.getElementById('claude-sign-in').click()`);
+  await wait(100);
+  assert.match(await setup.webContents.executeJavaScript(`document.getElementById('setup-message').textContent`), /Demo/);
+  assert.equal(await setup.webContents.executeJavaScript(`document.getElementById('claude-sign-in').disabled`), false);
   await setup.webContents.executeJavaScript(`document.getElementById('copilot-account').value = 'github-cli:usagebar-work'; document.getElementById('copilot-account').dispatchEvent(new Event('change'))`);
   await wait(150);
   assert.match(await setup.webContents.executeJavaScript(`document.getElementById('setup-message').textContent`), /Demo/);

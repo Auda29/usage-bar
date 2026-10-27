@@ -75,6 +75,28 @@ test('expiring profile login is renewed through the owning CLI before considerin
   assert.equal(result.token, 'renewed-profile-token');
   assert.equal(result.source, 'Claude Code');
 });
+
+test('a cleared Claude login is reported as invalid, while a new process reads a later login without restarting the app', async t => {
+  const options = await fixture(t);
+  const file = path.join(options.home, '.claude', '.credentials.json');
+  await write(file, {claudeAiOauth: {accessToken: '', refreshToken: '', expiresAt: 0, refreshTokenExpiresAt: 1, scopes: ['user:profile']}});
+  const before = await fs.readFile(file, 'utf8');
+  await assert.rejects(loadCredential('claude', options), /Anmeldung abgelaufen oder ungültig.*claude auth login --claudeai/);
+  assert.equal(await fs.readFile(file, 'utf8'), before);
+  await write(file, {claudeAiOauth: {accessToken: 'new-login', expiresAt: 9999999999999, scopes: ['user:profile']}});
+  const credential = await loadCredential('claude', options);
+  assert.equal(credential.token, 'new-login');
+  assert.equal(credential.source, 'Claude Code');
+  assert.equal((await loadCredential('claude', options)).token, 'new-login');
+});
+
+test('a missing Claude sign-in remains unconfigured and a cleared file does not hide an explicit environment token', async t => {
+  const options = await fixture(t);
+  assert.equal(await loadCredential('claude', options), null);
+  await write(path.join(options.home, '.claude', '.credentials.json'), {claudeAiOauth: {accessToken: '', refreshToken: '', expiresAt: 0, scopes: ['user:profile']}});
+  options.env.CLAUDE_CODE_OAUTH_TOKEN = 'explicit-token';
+  assert.equal((await loadCredential('claude', options)).token, 'explicit-token');
+});
 test('Codex token with account ID is read without altering the file', async (t) => {
   const options = await fixture(t);
   const file = path.join(options.home, '.codex', 'auth.json');

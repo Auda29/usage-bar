@@ -72,6 +72,10 @@ Being signed in for model requests does not guarantee usage access. A token from
 
 Claude Code access tokens expire even while an inference-only environment token keeps model requests working. When a stored profile sign-in is expired or within one minute of expiry, Usage Bar asks the official Claude CLI to renew it noninteractively using `CLAUDE_CODE_OAUTH_REFRESH_TOKEN` and `CLAUDE_CODE_OAUTH_SCOPES` in that child process only. The CLI updates its own authentication file; Usage Bar rereads it and does not exchange refresh tokens or write that file itself. Your global environment token is unchanged. This requires the native Claude CLI 2.1.310 or later, available on PATH or under `~/.local/bin/`. Concurrent requests share one renewal, and failed attempts have a five-minute cooldown. An unsupported or missing CLI does not open a browser automatically; sign in manually again if renewal is unavailable or the refresh token has been revoked.
 
+An empty saved login is reported as expired or invalid, rather than as a provider that was never configured. If the refresh token has a reported expiration date that has already passed, Usage Bar skips background renewal. It cannot restore tokens that Claude Code has cleared or a login that has expired completely. Under "Provider einrichten" (Set up providers), click "Mit Claude Code anmelden" (Sign in with Claude Code) and approve the official CLI's browser login. This explicit action uses the CLI's normal browser flow without inheriting inference-only or refresh-token environment overrides. Successful sign-in immediately triggers a new usage query; the app need not be restarted.
+
+The OpenCode fallback supports both the legacy `auth.json` and OpenCode 2's `opencode.db`. It reads only the active entry for the requested provider, using SQLite in read-only mode, and rereads it on each refresh. Active OpenCode 2 entries take precedence over an old JSON file in the same directory. Claude Code plugin placeholder credentials are not used as Anthropic usage tokens. The desktop app can read these local sources without OpenChamber running.
+
 **Codex:** Uses the `tokens` section in `~/.codex/auth.json` by default, including `account_id`. Respects `CODEX_HOME`. Falls back to OpenCode OAuth credentials. Usage data comes from `https://chatgpt.com/backend-api/wham/usage`. An OpenAI API key alone does not provide ChatGPT subscription limits.
 
 If a sign-in is missing or cannot be renewed, open Claude Code or Codex and sign in there. Use `claude auth login` or `codex login` for CLI authentication if needed. Usage Bar rereads the files on every refresh. Authentication files are not modified directly by Usage Bar; Claude renewal is delegated to the owning CLI as described above. Some Codex sign-in methods do not allow direct usage queries; the app displays an explanation and a link to the usage page in those cases.
@@ -128,6 +132,8 @@ The smoke test checks the actual Electron tray, IPC, logos, row dimensions, wind
 ## Credits
 
 The layout, row dimensions, and provider queries are based on [OpenChamber](https://github.com/openchamber/openchamber), examined at commit `8e2db38a63ac56575aa1519acc49f19ba4d8fddb`. The small provider logos come from that repository. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for license notices. Usage Bar is an independent project.
+
+Claude credential discovery was also compared with the installed OpenChamber 2.5.2 and upstream commit `ae9cb2584e5027d06671efcb06cf607360110d5d`, including its per-request reads and OpenCode 2 active credential selection. OpenChamber queries the running OpenCode API; Usage Bar reads its local credential table directly for standalone use.
 
 ## License and contributions
 

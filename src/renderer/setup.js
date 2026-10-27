@@ -91,6 +91,14 @@ function render() {
     website.addEventListener('click', () => api.openProvider(provider.id)); actions.append(website);
     details.append(actions);
     section.append(choice, status);
+    if (provider.id === 'claude') {
+      const login = make('button', 'setup-button', 'Mit Claude Code anmelden'); login.type = 'button'; login.id = 'claude-sign-in';
+      login.addEventListener('click', () => {
+        notify('Claude-Anmeldung im Browser bestätigen. Das kann einige Minuten dauern.');
+        return action(login, () => api.signInClaude(), 'Claude-Anmeldung gespeichert. Usage wird neu geladen.');
+      });
+      section.append(login);
+    }
     if (provider.id === 'copilot') {
       const accountPicker = make('div', 'account-picker');
       const label = make('label', '', 'GitHub-Konto für Usage Bar'); label.htmlFor = 'copilot-account';

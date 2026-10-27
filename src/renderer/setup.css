@@ -14,6 +14,7 @@
 .setup-button { border: 1px solid #424954; background: #232831; color: var(--foreground); border-radius: 4px; padding: 5px 9px; font-size: 12px; line-height: 18px; }
 .setup-button:hover { background: #2c333e; }
 .setup-button:disabled { opacity: .55; cursor: default; }
+#claude-sign-in { margin: 8px 0 0 30px; }
 .setup-button.subtle { background: none; border-color: transparent; color: var(--muted); }
 .setup-actions { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
 .token-form label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 5px; }

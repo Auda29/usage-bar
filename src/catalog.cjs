@@ -1,5 +1,5 @@
 const PROVIDERS = [
-  { id: 'claude', name: 'Claude', url: 'https://claude.ai/settings/usage', help: 'Mit Claude Code anmelden. Die vorhandene Anmeldung wird automatisch gelesen.' },
+  { id: 'claude', name: 'Claude', url: 'https://claude.ai/settings/usage', help: 'Mit „Mit Claude Code anmelden“ die Anmeldung im Browser bestätigen. Vorhandene gültige Anmeldungen werden automatisch gelesen. Ein abgelaufener oder gelöschter Refresh-Token erfordert eine erneute Anmeldung.' },
   { id: 'codex', name: 'Codex', url: 'https://chatgpt.com/settings/usage', help: 'Mit Codex anmelden. Die vorhandene Anmeldung wird automatisch gelesen.' },
   { id: 'gemini', name: 'Gemini', url: 'https://geminicli.com/docs/get-started/authentication/', help: 'Gemini CLI starten und mit Google anmelden. Ein Gemini-API-Key liefert diese Kontingente nicht.' },
   { id: 'copilot', name: 'GitHub Copilot', url: 'https://github.com/settings/copilot', help: 'Vorhandene Copilot-Anmeldung oder GitHub CLI verwenden. Alternativ einen GitHub-Token mit Zugriff auf die Copilot-Nutzung speichern.', tokenLabel: 'GitHub-Token' },

@@ -6,7 +6,8 @@ const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
 const { githubAccountToken, validGitHubLogin } = require('./github-accounts.cjs');
 const { loadGeminiClient } = require('./gemini-client.cjs');
-const { renewClaudeSignIn, hasClaudeProfileScope } = require('./claude-session.cjs');
+const { renewClaudeSignIn, hasClaudeProfileScope, CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
+const { readOpenCodeEntry } = require('./opencode-credentials.cjs');
 
 async function readJson(file) {
   try {
@@ -27,15 +28,17 @@ function validToken(value) { return typeof value === 'string' && value.trim().le
 
 async function openCodeCredential(provider, env, home) {
   const bases = [env.OPENCODE_DATA_DIR, path.join(env.XDG_DATA_HOME || path.join(home, '.local', 'share'), 'opencode'), env.APPDATA && path.join(env.APPDATA, 'opencode')].filter(Boolean);
+  const aliases = { claude: ['anthropic', 'claude'], codex: ['openai', 'codex', 'chatgpt'], gemini: ['google', 'google.oauth', 'gemini'], copilot: ['github-copilot', 'copilot'], openrouter: ['openrouter'] };
   for (const base of bases) {
-    const auth = await readJson(path.join(base, 'auth.json'));
-    const aliases = { claude: ['anthropic', 'claude'], codex: ['openai', 'codex', 'chatgpt'], gemini: ['google', 'google.oauth', 'gemini'], copilot: ['github-copilot', 'copilot'], openrouter: ['openrouter'] };
-    for (const alias of aliases[provider] || []) {
-      const entry = auth?.[alias];
+    const modern = await readOpenCodeEntry(base, aliases[provider] || []);
+    const auth = modern.available ? null : await readJson(path.join(base, 'auth.json'));
+    const entries = modern.available ? [modern.entry] : (aliases[provider] || []).map((alias) => auth?.[alias]);
+    for (const rawEntry of entries) {
+      const entry = typeof rawEntry === 'string' ? { token: rawEntry } : rawEntry;
       const token = validToken(entry?.access ?? entry?.token ?? (provider === 'openrouter' ? entry?.key : null));
       if (token) {
         const [refreshToken, projectId] = provider === 'gemini' ? (entry.refresh || '').split('|') : [];
-        return { token, accountId: validToken(entry.accountId), expiresAt: entry.expires ?? jwtExpiry(token), source: 'OpenCode', ...(provider === 'gemini' ? { refreshToken: validToken(refreshToken), projectId: projectId || null, oauthClient: await loadGeminiClient({ env, home }) } : {}) };
+        return { token, accountId: validToken(entry.accountId ?? entry.metadata?.accountID), expiresAt: entry.expires ?? jwtExpiry(token), source: 'OpenCode', ...(provider === 'gemini' ? { refreshToken: validToken(refreshToken), projectId: projectId || null, oauthClient: await loadGeminiClient({ env, home }) } : {}) };
       }
     }
   }
@@ -83,12 +86,13 @@ async function loadCredential(provider, { env = process.env, home = os.homedir()
     const token = validToken(oauth?.accessToken);
     // Usage needs profile permission. A setup-token can work for inference without it.
     const profileScope = hasClaudeProfileScope(oauth);
-    if (token && profileScope && (!oauth.expiresAt || oauth.expiresAt > Date.now())) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
+    if (token && profileScope && (typeof oauth.expiresAt !== 'number' || oauth.expiresAt > Date.now())) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
     const envToken = validToken(env.CLAUDE_CODE_OAUTH_TOKEN);
     if (envToken) return { token: envToken, expiresAt: jwtExpiry(envToken), source: 'Claude Code OAuth', requiresProfileCheck: true };
     if (token) return { token, expiresAt: oauth.expiresAt, source: 'Claude Code' };
     const fallback = await openCodeCredential(provider, env, home);
     if (fallback) return fallback;
+    if (oauth) throw new Error(CLAUDE_SIGN_IN_REQUIRED);
   } else if (provider === 'codex') {
     const auth = await readJson(path.join(env.CODEX_HOME || path.join(home, '.codex'), 'auth.json'));
     const token = validToken(auth?.tokens?.access_token);

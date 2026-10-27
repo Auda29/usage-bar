@@ -7,6 +7,9 @@ const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
 const pending = new Map();
 const failures = new Map();
+const signIns = new Map();
+const CLAUDE_SIGN_IN_REQUIRED = 'Claude-Code-Anmeldung abgelaufen oder ungültig. Mit „claude auth login --claudeai“ erneut anmelden.';
+class ClaudeSignInError extends Error {}
 
 function hasClaudeProfileScope(oauth) {
   return Array.isArray(oauth?.scopes) && oauth.scopes.some(scope => scope === 'user:profile' || scope === 'user:office');
@@ -21,7 +24,53 @@ async function readSignIn(file) {
 
 function needsRenewal(oauth, now) {
   return hasClaudeProfileScope(oauth) && typeof oauth?.expiresAt === 'number' && oauth.expiresAt <= now + 60000 &&
+    !(typeof oauth.refreshTokenExpiresAt === 'number' && oauth.refreshTokenExpiresAt <= now) &&
     typeof oauth.refreshToken === 'string' && oauth.refreshToken.length > 0 && oauth.refreshToken.length <= 16384 && !/[\r\n]/.test(oauth.refreshToken);
+}
+
+function cliCandidates(home) {
+  return [...new Set([
+    process.platform === 'win32' ? 'claude.exe' : 'claude',
+    path.join(home, '.local', 'bin', process.platform === 'win32' ? 'claude.exe' : 'claude'),
+  ])];
+}
+
+function loginEnvironment(env, directory) {
+  const child = { ...env };
+  if (env.CLAUDE_CONFIG_DIR) child.CLAUDE_CONFIG_DIR = directory;
+  for (const name of ['CLAUDE_CODE_OAUTH_TOKEN', 'CLAUDE_CODE_OAUTH_REFRESH_TOKEN', 'CLAUDE_CODE_OAUTH_SCOPES', 'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN']) delete child[name];
+  return child;
+}
+
+async function signInClaude({ env = process.env, home = os.homedir(), run = execFileAsync, now = Date.now } = {}) {
+  const directory = path.resolve(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'));
+  const file = path.join(directory, '.credentials.json');
+  if (signIns.has(file)) return signIns.get(file);
+  const task = (async () => {
+    // Do not run a browser login and a background renewal against the same file.
+    try { await pending.get(file); } catch { /* An explicit login can recover a failed background renewal. */ }
+    const childEnv = loginEnvironment(env, directory);
+    let executable;
+    for (const candidate of cliCandidates(home)) {
+      try {
+        const { stdout } = await run(candidate, ['--version'], { env: childEnv, windowsHide: true, timeout: 5000, maxBuffer: 4096 });
+        if (/^\d+\.\d+\.\d+\b/.test(stdout.trim())) { executable = candidate; break; }
+      } catch { /* Try the native installation when Explorer has an older PATH. */ }
+    }
+    if (!executable) throw new ClaudeSignInError('Claude Code nicht gefunden. Claude Code installieren und die Anmeldung erneut starten.');
+    try {
+      // Only an explicit click starts this browser login. Never expose CLI output.
+      await run(executable, ['auth', 'login', '--claudeai'], { env: childEnv, cwd: home, windowsHide: true, timeout: 300000, maxBuffer: 65536 });
+    } catch { /* The CLI can save the login before a later setup step fails. */ }
+    const oauth = await readSignIn(file);
+    if (!hasClaudeProfileScope(oauth) || !oauth?.accessToken || !(oauth.expiresAt > now())) {
+      throw new ClaudeSignInError('Claude-Anmeldung fehlgeschlagen oder abgebrochen. Erneut anmelden und im Browser bestätigen.');
+    }
+    failures.delete(file);
+    return oauth;
+  })().finally(() => signIns.delete(file));
+  signIns.set(file, task);
+  return task;
 }
 
 function supportsRefresh(version) {
@@ -34,6 +83,7 @@ function supportsRefresh(version) {
 
 async function renewClaudeSignIn(file, { env = process.env, home = os.homedir(), now = Date.now, run = execFileAsync } = {}) {
   const key = path.resolve(file);
+  if (signIns.has(key)) return signIns.get(key);
   if (pending.has(key)) return pending.get(key);
   const task = (async () => {
     // Another Claude process may have renewed the sign-in since the caller read it.
@@ -42,12 +92,8 @@ async function renewClaudeSignIn(file, { env = process.env, home = os.homedir(),
     const fingerprint = createHash('sha256').update(oauth.refreshToken).digest('hex');
     const failed = failures.get(key);
     if (failed?.fingerprint === fingerprint && failed.retryAt > now()) return oauth;
-    const candidates = [...new Set([
-      process.platform === 'win32' ? 'claude.exe' : 'claude',
-      path.join(home, '.local', 'bin', process.platform === 'win32' ? 'claude.exe' : 'claude'),
-    ])];
     let executable;
-    for (const candidate of candidates) {
+    for (const candidate of cliCandidates(home)) {
       try {
         const { stdout } = await run(candidate, ['--version'], { env, windowsHide: true, timeout: 5000, maxBuffer: 4096 });
         if (supportsRefresh(stdout)) { executable = candidate; break; }
@@ -72,4 +118,4 @@ async function renewClaudeSignIn(file, { env = process.env, home = os.homedir(),
   return task;
 }
 
-module.exports = { renewClaudeSignIn, hasClaudeProfileScope };
+module.exports = { renewClaudeSignIn, signInClaude, ClaudeSignInError, hasClaudeProfileScope, CLAUDE_SIGN_IN_REQUIRED };

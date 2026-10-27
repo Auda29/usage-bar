@@ -6,6 +6,8 @@ https://github.com/openchamber/openchamber
 
 Reference commit: 8e2db38a63ac56575aa1519acc49f19ba4d8fddb
 
+Additional Claude credential-discovery reference: installed OpenChamber 2.5.2 and commit ae9cb2584e5027d06671efcb06cf607360110d5d, specifically `quota/providers/claude/auth.js` and `opencode/auth.js`. Usage Bar implements local, read-only access to OpenCode 2's selected provider record for standalone use.
+
 The compact layout follows `WorkStatusUsageSection.tsx` and `WorkStatusPrimitives.tsx`. Provider access and normalization follow the quota modules. The Claude, Codex, Gemini, Copilot, Cursor, and OpenRouter SVGs in `assets/` are copied from the provider-logo assets. Provider names and marks belong to their respective owners. This project is independent of OpenChamber and the supported providers.
 
 ```text

@@ -9,6 +9,7 @@ const { PROVIDERS, PROVIDER_IDS, DEFAULT_SETTINGS, normalizeSettings } = require
 const { loadCredential, readCursorCredential } = require('./credentials.cjs');
 const { CredentialVault } = require('./vault.cjs');
 const { listGitHubAccounts, githubAccountLogin } = require('./github-accounts.cjs');
+const { signInClaude, ClaudeSignInError, CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
 
 const smoke = process.env.USAGE_BAR_SMOKE === '1';
 const demo = smoke || process.argv.includes('--demo');
@@ -138,7 +139,7 @@ async function getSetupState() {
       credentials[id] = { available: Boolean(credential), source: credential?.source || null, stored: Boolean(managedCredential) };
       if (id === 'copilot') credentials[id].login = await githubAccountLogin(credential);
     } catch {
-      credentials[id] = { available: false, source: null, stored: Boolean(managedCredential), login: id === 'copilot' ? managedCredential?.login : null, error: 'Ausgewähltes Konto nicht verfügbar. Erneut anmelden oder anderes Konto auswählen.' };
+      credentials[id] = { available: false, source: null, stored: Boolean(managedCredential), login: id === 'copilot' ? managedCredential?.login : null, error: id === 'claude' ? CLAUDE_SIGN_IN_REQUIRED : 'Anmeldung nicht verfügbar. Erneut anmelden oder anderes Konto auswählen.' };
     }
   }
   return { catalog: PROVIDERS, settings, credentials, copilotAccounts, selectedCopilotAccount, demo };
@@ -220,6 +221,15 @@ function registerIpc() {
   ipcMain.handle('usage:get', (event) => { trusted(event); return state; });
   ipcMain.handle('usage:setup-state', (event) => { trusted(event); return getSetupState(); });
   ipcMain.handle('usage:setup-open', (event) => { trusted(event); void showSetup(); });
+  ipcMain.handle('usage:claude-sign-in', async (event) => {
+    trusted(event);
+    if (demo) return { ok: false, error: 'In der Demo wird keine Claude-Anmeldung gestartet.' };
+    try {
+      await signInClaude();
+      credentialChanged('claude');
+      return { ok: true };
+    } catch (error) { return { ok: false, error: error instanceof ClaudeSignInError ? error.message : 'Claude-Anmeldung konnte nicht abgeschlossen werden. Bitte erneut versuchen.' }; }
+  });
   ipcMain.handle('usage:providers', (event, ids) => {
     trusted(event);
     if (!Array.isArray(ids) || ids.some((id) => !PROVIDER_IDS.includes(id))) throw new Error('Ungültige Provider-Auswahl.');

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.5 - 2026-10-27
+
+- Report empty or cleared Claude Code credentials as an expired or invalid login instead of "Claude einrichten".
+- Skip background renewal when the saved refresh token has already expired.
+- Add "Mit Claude Code anmelden" to provider setup. An explicit click starts the official CLI's browser login, strips conflicting authentication environment overrides in that child process, and reloads usage after sign-in.
+- Read active provider credentials from OpenCode 2's local database in read-only mode, alongside support for legacy `auth.json`. Compare discovery with OpenChamber 2.5.2.
+
 ## 1.1.4 - 2026-10-26
 
 - Added a Windows x64 installer to this release on 2026-10-27. Setup installs for the current user, adds a Start menu entry, and preserves settings and saved credentials on updates and uninstall.

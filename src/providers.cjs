@@ -2,6 +2,7 @@ const { createHash } = require('node:crypto');
 const { loadCredential } = require('./credentials.cjs');
 const { PROVIDERS } = require('./catalog.cjs');
 const { fetchProvider } = require('./provider-requests.cjs');
+const { CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
 
 class ProviderService {
   constructor({ fetchImpl = fetch, credentialLoader = loadCredential, now = Date.now } = {}) {
@@ -35,8 +36,8 @@ class ProviderService {
         entry = { fingerprint, rows: [], fetchedAt: null, retryAt: 0 };
         this.cache.set(id, entry);
       }
-      if (credential.expiresAt && credential.expiresAt <= this.now() && !(id === 'gemini' && credential.refreshToken)) {
-        throw new Error(`Anmeldung abgelaufen. ${meta.name === 'Claude' ? 'Claude Code' : meta.name} öffnen.`);
+      if (typeof credential.expiresAt === 'number' && credential.expiresAt <= this.now() && !(id === 'gemini' && credential.refreshToken)) {
+        throw new Error(id === 'claude' ? CLAUDE_SIGN_IN_REQUIRED : `Anmeldung abgelaufen. ${meta.name} öffnen.`);
       }
       if (entry.retryAt > this.now()) throw new Error('Zu viele Abfragen. Neuer Versuch nach der Wartezeit.');
       if (entry.profileError) throw new Error(entry.profileError);
