@@ -186,9 +186,10 @@ function buildMenu() {
       { label: 'Verbraucht', type: 'radio', checked: settings.displayMode === 'usage', click: () => updateSettings({ displayMode: 'usage' }) },
       { label: 'Verbleibend', type: 'radio', checked: settings.displayMode === 'remaining', click: () => updateSettings({ displayMode: 'remaining' }) },
     ] },
-    { label: 'Design', submenu: THEMES.map(({ id, name }) => ({
-      label: name, type: 'radio', checked: settings.theme === id, click: () => updateSettings({ theme: id }),
-    })) },
+    { label: 'Design', submenu: THEMES.flatMap(({ id, name, legacy }) => [
+      ...(legacy ? [{ type: 'separator' }] : []),
+      { label: name, type: 'radio', checked: settings.theme === id, click: () => updateSettings({ theme: id }) },
+    ]) },
     { label: 'Funktionen', submenu: FEATURES.map(({ key, name }) => ({
       label: name, type: 'checkbox', checked: settings[key], click: (item) => updateSettings({ [key]: item.checked }),
     })) },

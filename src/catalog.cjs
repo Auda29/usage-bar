@@ -8,14 +8,15 @@ const PROVIDERS = [
 ];
 const PROVIDER_IDS = PROVIDERS.map(({ id }) => id);
 // The background paints the frameless window before the renderer's CSS loads.
+// The first design is the default. Klassisch, the original look, stays selectable as legacy.
 const THEMES = [
-  { id: 'classic', name: 'Klassisch', background: '#181b22' },
+  { id: 'compact', name: 'Kompakt', background: '#161716' },
   { id: 'fluent', name: 'Fluent', background: '#1b1e25' },
   { id: 'tiles', name: 'Kacheln', background: '#111118' },
   { id: 'terminal', name: 'Terminal', background: '#0e0f0c' },
   { id: 'focus', name: 'Fokus', background: '#1a1a19' },
   { id: 'light', name: 'Hell', background: '#fbfbfa' },
-  { id: 'compact', name: 'Kompakt', background: '#161716' },
+  { id: 'classic', name: 'Klassisch (Legacy)', background: '#181b22', legacy: true },
 ];
 const THEME_IDS = THEMES.map(({ id }) => id);
 const FEATURES = [
@@ -23,7 +24,7 @@ const FEATURES = [
   { key: 'showTimeline', name: 'Reset-Zeitleiste' },
   { key: 'sortByUsage', name: 'Nach Auslastung sortieren' },
 ];
-const DEFAULT_SETTINGS = { displayMode: 'usage', expanded: true, providers: ['claude', 'codex'], headlineProvider: 'claude', hasLaunched: false, theme: 'classic', showPace: false, showTimeline: false, sortByUsage: false };
+const DEFAULT_SETTINGS = { displayMode: 'usage', expanded: true, providers: ['claude', 'codex'], headlineProvider: 'claude', hasLaunched: false, theme: THEMES[0].id, showPace: false, showTimeline: false, sortByUsage: false };
 function normalizeSettings(saved = {}) {
   return {
     displayMode: saved.displayMode === 'remaining' ? 'remaining' : 'usage',

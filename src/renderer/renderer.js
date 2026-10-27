@@ -2,7 +2,7 @@
 const api = window.usageBar;
 const views = window.UsageViews;
 const elements = Object.fromEntries(['toggle', 'refresh', 'headline', 'providers', 'demo-note', 'mode-switch', 'hero', 'alert', 'timeline', 'footer'].map((id) => [id, document.getElementById(id)]));
-let state = { providers: [], loading: true, settings: { expanded: true, displayMode: 'usage', providers: ['claude', 'codex'], headlineProvider: 'claude', theme: 'classic' } };
+let state = { providers: [], loading: true, settings: { expanded: true, displayMode: 'usage', providers: ['claude', 'codex'], headlineProvider: 'claude', theme: 'compact' } };
 
 function headlineEntry() {
   const selected = state.providers.find((provider) => provider.id === state.settings.headlineProvider && state.settings.providers.includes(provider.id));
@@ -54,7 +54,7 @@ function renderExtras(ctx, providers, entry, expanded) {
 
 function applyDocumentFlags(settings) {
   const root = document.documentElement;
-  root.dataset.theme = settings.theme || 'classic';
+  root.dataset.theme = settings.theme || 'compact';
   root.toggleAttribute('data-pace', Boolean(settings.showPace));
 }
 
