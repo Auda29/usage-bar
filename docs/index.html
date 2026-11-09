@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usage Bar · Deine KI-Limits im Blick</title>
+  <meta name="description" content="Claude, Codex, Gemini, Copilot, Cursor und OpenRouter in einer Windows-Tray-App. Verbrauch, Reset-Zeiten und sieben Designs. Kostenloser Download.">
+  <meta name="theme-color" content="#101113">
+  <meta property="og:title" content="Usage Bar · Deine KI-Limits im Blick">
+  <meta property="og:description" content="Eine kleine Windows-App für die Nutzungslimits deiner KI-Dienste. Sechs Provider. Sieben Designs.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://auda29.github.io/usage-bar/">
+  <meta property="og:image" content="https://auda29.github.io/usage-bar/images/usage-bar.png">
+  <link rel="canonical" href="https://auda29.github.io/usage-bar/">
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="stylesheet" href="site.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Zum Inhalt</a>
+<header class="header"><nav class="wrap nav" aria-label="Hauptnavigation">
+  <a class="brand" href="./" aria-label="Usage Bar Startseite"><img class="brand-icon" src="images/favicon.svg" alt="" width="35" height="35">Usage Bar</a>
+  <div class="nav-links"><a href="#designs">Designs</a><a class="optional" href="#providers">Provider</a><a class="optional" href="https://github.com/Auda29/usage-bar">GitHub ↗</a><a class="nav-cta" href="#download">Download ↓</a></div>
+</nav></header>
+<main id="main">
+<div class="wrap">
+  <section class="hero" aria-labelledby="hero-title">
+    <div><div class="eyebrow">Windows-Tray-App · Open Source</div>
+      <h1 id="hero-title">Deine KI-Limits.<br><span>Ein Blick genügt.</span></h1>
+      <p class="lead">Wie viel ist noch übrig? Usage Bar zeigt dir Verbrauch und Reset-Zeiten deiner KI-Dienste direkt neben der Windows-Uhr.</p>
+      <div class="actions"><a class="btn primary" href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/Usage-Bar-v1.3.0-windows-x64-Setup.exe">Für Windows laden <span aria-hidden="true">↓</span></a><a class="btn" href="#designs">Designs ansehen <span aria-hidden="true">↗</span></a></div>
+      <p class="small hero-note">v1.3.0 · Windows 10 / 11 · x64 · MIT-Lizenz</p>
+    </div>
+    <figure class="hero-media"><div class="media-top"><span>DEINE DIENSTE, ZUSAMMEN</span><span class="live">6 PROVIDER</span></div><img src="images/usage-bar.png" alt="Usage Bar zeigt Nutzung und Reset-Zeiten aller sechs Provider mit gekennzeichneten Beispieldaten" width="355" height="550" fetchpriority="high"><figcaption>Originalansicht der App mit Beispieldaten.</figcaption></figure>
+  </section>
+  <div class="provider-strip" aria-label="Unterstützte Provider">
+    <span class="provider"><img src="images/providers/claude.svg" alt="" width="22" height="22">Claude</span><span class="provider"><img src="images/providers/codex.svg" alt="" width="22" height="22">Codex</span><span class="provider"><img src="images/providers/gemini.svg" alt="" width="22" height="22">Gemini</span><span class="provider"><img src="images/providers/copilot.svg" alt="" width="22" height="22">GitHub Copilot</span><span class="provider"><img src="images/providers/cursor.svg" alt="" width="22" height="22">Cursor</span><span class="provider"><img src="images/providers/openrouter.svg" alt="" width="22" height="22">OpenRouter</span>
+  </div>
+  <section class="section" aria-labelledby="overview-title">
+    <div class="section-head"><div><span class="section-index">01 / IM ALLTAG</span><h2 id="overview-title">Weniger nachsehen.<br>Weiterarbeiten.</h2></div><p class="section-intro">Ein Klick auf das Tray-Icon öffnet deine Übersicht. Ein weiterer Klick schließt sie wieder.</p></div>
+    <div class="features"><article class="feature"><span class="number">01</span><h3>Verbrauch und Reset</h3><p>Stündliche und wöchentliche Limits, Modellkontingente oder Budgets. Du siehst die Werte, die der jeweilige Dienst bereitstellt.</p></article><article class="feature"><span class="number">02</span><h3>Alle drei Minuten aktuell</h3><p>Die App aktualisiert aktivierte Provider automatisch. Mit F5 oder dem Refresh-Button kannst du selbst nachsehen. Rate-Limits werden berücksichtigt.</p></article><article class="feature"><span class="number">03</span><h3>Nur deine Dienste</h3><p>Wähle jeden Provider einzeln aus. Ein einziger reicht. Deaktivierte Dienste werden im Hintergrund nicht abgefragt.</p></article></div>
+  </section>
+  <section class="section" id="designs" aria-labelledby="designs-title">
+    <div class="section-head"><div><span class="section-index">02 / DEINE ANSICHT</span><h2 id="designs-title">Gleiche Daten.<br>Dein Design.</h2></div><p class="section-intro">Sieben Ansichten, direkt im Tray-Menü umschaltbar. Wähle ein Design für die Vorschau.</p></div>
+    <div class="gallery"><div class="design-list" role="group" aria-label="Design auswählen">
+      <button class="design-btn" type="button" aria-pressed="true" aria-controls="design-image" data-design="compact" data-label="Kompakt" data-description="Die Standardansicht"><span>Kompakt</span><span>STANDARD</span></button>
+      <button class="design-btn" type="button" aria-pressed="false" aria-controls="design-image" data-design="fluent" data-label="Fluent" data-description="Mehr Raum für deine Übersicht"><span>Fluent</span><span>02</span></button>
+      <button class="design-btn" type="button" aria-pressed="false" aria-controls="design-image" data-design="tiles" data-label="Kacheln" data-description="Provider in einzelnen Kacheln"><span>Kacheln</span><span>03</span></button>
+      <button class="design-btn" type="button" aria-pressed="false" aria-controls="design-image" data-design="terminal" data-label="Terminal" data-description="Reduziert und textorientiert"><span>Terminal</span><span>04</span></button>
+      <button class="design-btn" type="button" aria-pressed="false" aria-controls="design-image" data-design="focus" data-label="Fokus" data-description="Limits im Mittelpunkt"><span>Fokus</span><span>05</span></button>
+      <button class="design-btn" type="button" aria-pressed="false" aria-controls="design-image" data-design="light" data-label="Hell" data-description="Die helle Ansicht"><span>Hell</span><span>06</span></button>
+      <button class="design-btn" type="button" aria-pressed="false" aria-controls="design-image" data-design="classic" data-label="Klassisch" data-description="Das ursprüngliche Design, ohne weitere Designentwicklung"><span>Klassisch</span><span>LEGACY</span></button>
+    </div><div><figure class="design-stage"><img id="design-image" src="images/designs/compact.png" width="355" height="432" loading="lazy" alt="Usage Bar im Design Kompakt mit Beispieldaten"></figure><p class="gallery-caption" id="design-caption" aria-live="polite">Kompakt · Die Standardansicht · Beispieldaten</p><noscript><p class="small">Alle sieben Designs findest du auch in der <a href="https://github.com/Auda29/usage-bar#designs">Galerie im Repository</a>.</p></noscript></div></div>
+    <div class="detail-grid"><article class="detail"><h3>Verbrauchstempo</h3><p>Der Pace-Marker setzt Verbrauch und vergangene Zeit ins Verhältnis. Ein Pfeil warnt, wenn das Limit bei gleichem Tempo vor dem Reset erreicht würde.</p><img src="images/designs/feature-pace.png" width="355" height="721" loading="lazy" alt="Pace-Marker im Fokus-Design, Beispieldaten"></article><article class="detail"><h3>Reset-Zeitleiste</h3><p>Die nächsten Resets auf einer gemeinsamen Zeitleiste über zwei Wochen. Die ersten 24 Stunden erhalten mehr Platz.</p><img src="images/designs/feature-timeline.png" width="355" height="561" loading="lazy" alt="Reset-Zeitleiste im Kompakt-Design, Beispieldaten"></article><article class="detail"><h3>Nach Auslastung sortieren</h3><p>Alle Limits in einer Liste, mit der höchsten Auslastung zuerst. Werte ohne Prozentangabe erscheinen darunter.</p><img src="images/designs/feature-ranked.png" width="355" height="516" loading="lazy" alt="Nach Auslastung sortierte Limits im hellen Design, Beispieldaten"></article></div>
+    <p class="small">Die Zusatzansichten lassen sich kombinieren. Pace-Marker benötigen eine vom Provider gemeldete Zeitfensterlänge.</p>
+  </section>
+  <section class="section" id="providers" aria-labelledby="providers-title">
+    <div class="section-head"><div><span class="section-index">03 / VERBINDUNGEN</span><h2 id="providers-title">Deine Konten.<br>Eine Übersicht.</h2></div><p class="section-intro">Nutze vorhandene lokale Anmeldungen oder richte unterstützte Tokens in der App ein.</p></div>
+    <table class="provider-table"><caption class="small" style="text-align:left;padding-bottom:16px">Anmeldung und angezeigte Werte je Provider</caption><thead><tr><th scope="col">Provider</th><th scope="col">Was du siehst</th><th scope="col">Anmeldung</th></tr></thead><tbody>
+      <tr><td>Claude</td><td>Stündliche und wöchentliche Limits, Resets</td><td>Claude Code mit Profilberechtigung oder OpenCode OAuth</td></tr>
+      <tr><td>Codex</td><td>Abo-Limits, Resets und Credits</td><td>Codex-Anmeldung oder OpenCode OAuth</td></tr>
+      <tr><td>Gemini</td><td>Modellkontingente und Resets</td><td>Gemini CLI mit Google-Anmeldung oder OpenCode OAuth</td></tr>
+      <tr><td>GitHub Copilot</td><td>KI-Credits und Reset-Datum</td><td>GitHub CLI, lokale Anmeldung oder geeigneter Token</td></tr>
+      <tr><td>Cursor</td><td>Planverbrauch, Auto/API und verfügbare Zusatzkontingente</td><td>Expliziter Import der Desktop-Anmeldung oder Token</td></tr>
+      <tr><td>OpenRouter</td><td>Key-Budget und Nutzung, sonst monatliche Ausgaben</td><td>Regulärer API-Key oder OpenCode-Anmeldung</td></tr>
+    </tbody></table>
+    <div class="callout"><strong>Eine API-Anmeldung ist nicht immer eine Abo-Anmeldung.</strong> Ein OpenAI- oder Gemini-API-Key allein liefert keine entsprechenden Abo-Limits. Die Daten und Zugriffsrechte hängen vom Dienst und Konto ab. <a href="https://github.com/Auda29/usage-bar#authentication-and-data">Alle Anmeldewege und Einschränkungen ↗</a></div>
+  </section>
+  <section class="section" id="download" aria-labelledby="download-title">
+    <div class="section-head"><div><span class="section-index">04 / LOSLEGEN</span><h2 id="download-title">Installieren. Verbinden.<br>Im Blick behalten.</h2></div><p class="section-intro">Windows 10 oder 11, x64. Kein Node.js, kein OpenChamber und keine Administratorrechte für die normale Installation nötig.</p></div>
+    <div class="steps"><article class="step"><h3>App installieren</h3><p>Lade den Installer und starte Setup. Alternativ entpackst du das portable ZIP vollständig und öffnest <code>Usage Bar.exe</code>.</p></article><article class="step"><h3>Provider einrichten</h3><p>Rechtsklick auf das Tray-Icon → „Provider einrichten…“. Aktiviere deine Dienste und nutze die passende lokale Anmeldung oder hinterlege einen Token.</p></article><article class="step"><h3>Ansicht wählen</h3><p>Öffne die Übersicht per Linksklick. Design und Zusatzfunktionen findest du im Kontextmenü. Liegt das Icon im Überlauf, ziehe es neben die Uhr.</p></article></div>
+    <div class="download-panel"><div><h3>Usage Bar v1.3.0</h3><p class="small">Windows x64 · Installer oder portable Version</p></div><div class="actions"><a class="btn primary" href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/Usage-Bar-v1.3.0-windows-x64-Setup.exe">Installer ↓</a><a class="btn" href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/Usage-Bar-v1.3.0-windows-x64.zip">Portables ZIP ↓</a></div></div>
+    <p class="small"><a href="https://github.com/Auda29/usage-bar/releases/latest">Aktuellstes Release und Änderungen</a> · <a href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/SHA256SUMS.txt">SHA-256-Prüfsummen für v1.3.0</a>. Der Installer ist derzeit nicht signiert.</p>
+  </section>
+  <section class="section" aria-labelledby="faq-title"><div class="section-head"><div><span class="section-index">05 / GUT ZU WISSEN</span><h2 id="faq-title">Noch eine Frage?</h2></div></div>
+    <details><summary>Kostet Usage Bar etwas?</summary><p>Usage Bar ist unter der MIT-Lizenz verfügbar. Der Download ist kostenlos. Die Konten und gegebenenfalls kostenpflichtigen Tarife der angebundenen Dienste benötigst du separat.</p></details>
+    <details><summary>Wo bleiben meine Anmeldedaten?</summary><p>Die App liest unterstützte lokale Anmeldungen. Manuell hinterlegte Tokens werden mit Windows DPAPI über Electron safeStorage verschlüsselt. Zugangsdaten werden nicht an die Anzeigeoberfläche weitergereicht oder protokolliert. Die Nutzungsabfragen gehen an die jeweiligen Provider. Details stehen in der <a href="https://github.com/Auda29/usage-bar#authentication-and-data">Dokumentation zu Anmeldung und Daten</a>.</p></details>
+    <details><summary>Was passiert bei einem Verbindungsfehler?</summary><p>Die letzten erfolgreich geladenen Werte bleiben mit Fehlerhinweis und Zeitstempel sichtbar. Bei einem Kontowechsel verwirft die App die bisherigen Werte. Manuelles Aktualisieren umgeht keine Provider-Rate-Limits.</p></details>
+    <details><summary>Gibt es eine Version für macOS oder Linux?</summary><p>Aktuell werden ausschließlich Windows-Versionen veröffentlicht. Die Anwendung benötigt Windows 10 oder 11 auf einem x64-Prozessor.</p></details>
+  </section>
+</div>
+</main>
+<footer class="wrap footer"><span>Usage Bar · Ein unabhängiges Open-Source-Projekt von Auda29.</span><div class="footer-links"><a href="https://github.com/Auda29/usage-bar">Quellcode ↗</a><a href="https://github.com/Auda29/usage-bar/issues">Fehler melden ↗</a><a href="https://github.com/Auda29/usage-bar/blob/main/THIRD_PARTY_NOTICES.md">Lizenzen &amp; Credits ↗</a></div></footer>
+</body></html>
