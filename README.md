@@ -1,6 +1,6 @@
 # Usage Bar
 
-[Project website](https://auda29.github.io/usage-bar/) · [Downloads](https://github.com/Auda29/usage-bar/releases/latest)
+[Website (DE)](https://auda29.github.io/usage-bar/) · [Website (EN)](https://auda29.github.io/usage-bar/en.html) · [Downloads](https://github.com/Auda29/usage-bar/releases/latest)
 
 A small Windows tray app for usage limits across Claude, Codex, Gemini, GitHub Copilot, Cursor, and OpenRouter, with seven selectable designs.
 
