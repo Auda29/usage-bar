@@ -12,6 +12,11 @@ function demoProviders(now = Date.now()) {
       { key: 'pro', label: 'gemini-pro', usedPercent: 24, resetAt: now + 8 * 3600000, windowSeconds: 86400 },
       { key: 'flash', label: 'gemini-flash', usedPercent: 8, resetAt: now + 45 * 60000, windowSeconds: 86400 },
     ] },
+    { id: 'antigravity', name: 'Antigravity', status: 'ok', fetchedAt: now, rows: [
+      { key: 'gemini-5h', label: 'Gemini · 5h', usedPercent: 18, resetAt: now + 3 * 3600000, windowSeconds: 18000 },
+      { key: 'gemini-weekly', label: 'Gemini · 7d', usedPercent: 32, resetAt: now + 5 * 86400000, windowSeconds: 604800 },
+      { key: '3p-weekly', label: 'Claude & GPT · 7d', usedPercent: 45, resetAt: now + 5 * 86400000, windowSeconds: 604800 },
+    ] },
     { id: 'copilot', name: 'GitHub Copilot', status: 'ok', fetchedAt: now, rows: [
       { key: 'credits', label: 'AI Credits', usedPercent: 35, resetAt: now + 10 * 86400000, windowSeconds: null },
     ] },

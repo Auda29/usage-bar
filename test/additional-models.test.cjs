@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseGemini, parseCopilot, parseCursor, parseOpenRouter } = require('../src/additional-models.cjs');
+const { parseGemini, parseAntigravity, parseCopilot, parseCursor, parseOpenRouter } = require('../src/additional-models.cjs');
 const { normalizeSettings } = require('../src/catalog.cjs');
 
 test('Gemini keeps a fully available quota at zero and groups duplicate model buckets by the tightest limit', () => {
@@ -52,9 +52,55 @@ test('OpenRouter honors effective workspace budgets and keeps unlimited-key spen
   assert.throws(() => parseOpenRouter({ data: { limit: 100 } }));
   assert.throws(() => parseOpenRouter({ data: { is_management_key: true } }));
 });
+test('Antigravity parses grouped 5h and weekly quotas, orders shorter windows first, and keeps tooltips', () => {
+  const rows = parseAntigravity({ groups: [
+    {
+      displayName: 'Gemini Models',
+      description: 'Models within this group: Gemini 4 Neon, Gemini 3.8 Flash',
+      buckets: [
+        { bucketId: 'gemini-weekly', window: 'weekly', resetTime: '2026-11-29T18:26:36Z', remainingFraction: 0.975 },
+        { bucketId: 'gemini-5h', window: '5h', resetTime: '2026-11-23T12:48:54Z', remainingFraction: 0.8 },
+      ],
+    },
+    {
+      displayName: 'Claude and GPT models',
+      buckets: [
+        { bucketId: '3p-weekly', window: 'weekly', resetTime: '2026-11-29T18:26:50Z', remainingFraction: 0.9 },
+        { bucketId: '3p-5h', window: '5h', resetTime: '2026-11-23T13:01:29Z', remainingFraction: 1 },
+      ],
+    },
+    {
+      displayName: 'Gemini 4 Argon',
+      buckets: [
+        { bucketId: 'gemini-argon-wtu-weekly', window: 'weekly', resetTime: '2026-11-30T08:01:29Z', remainingFraction: 1 },
+        { bucketId: 'ignored', window: 'weekly', remainingFraction: null },
+      ],
+    },
+  ] });
+  assert.deepEqual(rows.map(({ key, label, windowSeconds }) => ({ key, label, windowSeconds })), [
+    { key: 'gemini-5h', label: 'Gemini · 5h', windowSeconds: 18000 },
+    { key: 'gemini-weekly', label: 'Gemini · 7d', windowSeconds: 604800 },
+    { key: '3p-5h', label: 'Claude & GPT · 5h', windowSeconds: 18000 },
+    { key: '3p-weekly', label: 'Claude & GPT · 7d', windowSeconds: 604800 },
+    { key: 'gemini-argon-wtu-weekly', label: 'Argon · 7d', windowSeconds: 604800 },
+  ]);
+  assert(Math.abs(rows[0].usedPercent - 20) < 1e-8);
+  assert(Math.abs(rows[1].usedPercent - 2.5) < 1e-8);
+  assert.equal(rows[2].usedPercent, 0);
+  assert.equal(rows[0].resetAt, Date.parse('2026-11-23T12:48:54Z'));
+  assert.match(rows[0].detail, /Gemini 4 Neon/);
+  const deduped = parseAntigravity({ groups: [{ displayName: 'Gemini Models', buckets: [
+    { bucketId: 'gemini-5h', window: '5h', remainingFraction: 0.9 },
+    { bucketId: 'gemini-5h', window: '5h', remainingFraction: 0.4 },
+  ] }] });
+  assert.equal(deduped.length, 1);
+  assert(Math.abs(deduped[0].usedPercent - 60) < 1e-8);
+  assert.throws(() => parseAntigravity({ groups: [{ displayName: 'Empty', buckets: [{ bucketId: 'x' }] }] }));
+});
 test('existing choices survive an upgrade and new providers can be selected independently', () => {
   assert.deepEqual(normalizeSettings({ providers: ['codex'] }).providers, ['codex']);
   assert.deepEqual(normalizeSettings({ providers: [] }).providers, []);
-  assert.deepEqual(normalizeSettings({ providers: ['gemini', 'copilot', 'cursor', 'openrouter', 'gemini', 'unknown'] }).providers, ['gemini', 'copilot', 'cursor', 'openrouter']);
+  assert.deepEqual(normalizeSettings({ providers: ['gemini', 'antigravity', 'copilot', 'cursor', 'openrouter', 'gemini', 'unknown'] }).providers, ['gemini', 'antigravity', 'copilot', 'cursor', 'openrouter']);
+  assert.equal(normalizeSettings({ headlineProvider: 'antigravity' }).headlineProvider, 'antigravity');
   assert.equal(normalizeSettings({ headlineProvider: 'openrouter' }).headlineProvider, 'openrouter');
 });

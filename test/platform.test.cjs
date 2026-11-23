@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { executable, cursorStateFile, npmGlobalRoots, openCodeDataDirs, supportsLoginItems } = require('../src/platform.cjs');
+const { executable, cursorStateFile, npmGlobalRoots, openCodeDataDirs, antigravityTokenFiles, t3AntigravityProvidersDir, supportsLoginItems } = require('../src/platform.cjs');
 
 const win = { platform: 'win32', home: 'C:\\Users\\ada', env: { APPDATA: 'C:\\Users\\ada\\AppData\\Roaming' } };
 const mac = { platform: 'darwin', home: '/Users/ada', env: {} };
@@ -33,6 +33,16 @@ test('OpenCode data is searched in its override, XDG and Windows locations', () 
   assert.deepEqual(openCodeDataDirs({ ...linux, env: { OPENCODE_DATA_DIR: '/x/opencode' } }), ['/x/opencode', '/home/ada/.local/share/opencode']);
   assert.deepEqual(openCodeDataDirs(win), [path.win32.join(win.home, '.local', 'share', 'opencode'), path.win32.join(win.env.APPDATA, 'opencode')]);
   assert.deepEqual(openCodeDataDirs({ ...mac, env: { XDG_DATA_HOME: '/Users/ada/data' } }), ['/Users/ada/data/opencode']);
+});
+
+test('Antigravity token paths cover overrides, CLI directories and T3 Code userdata', () => {
+  assert.deepEqual(antigravityTokenFiles(win), [
+    path.win32.join(win.home, '.gemini', 'antigravity-cli', 'antigravity-oauth-token'),
+    path.win32.join(win.home, '.gemini', 'antigravity', 'antigravity-oauth-token'),
+  ]);
+  assert.equal(antigravityTokenFiles({ ...linux, env: { ANTIGRAVITY_OAUTH_TOKEN_FILE: '/custom/token' } })[0], '/custom/token');
+  assert.equal(t3AntigravityProvidersDir(win), path.win32.join(win.home, '.t3', 'userdata', 'providers', 'antigravity'));
+  assert.equal(t3AntigravityProvidersDir({ ...mac, env: { T3_USERDATA_DIR: '/custom/t3' } }), '/custom/t3/providers/antigravity');
 });
 
 test('start at login is offered where Electron supports it', () => {

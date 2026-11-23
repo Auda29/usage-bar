@@ -8,7 +8,7 @@ const { githubAccountToken, validGitHubLogin } = require('./github-accounts.cjs'
 const { loadGeminiClient } = require('./gemini-client.cjs');
 const { renewClaudeSignIn, hasClaudeProfileScope, CLAUDE_SIGN_IN_REQUIRED } = require('./claude-session.cjs');
 const { readOpenCodeEntry } = require('./opencode-credentials.cjs');
-const { executable, cursorStateFile, openCodeDataDirs } = require('./platform.cjs');
+const { executable, cursorStateFile, openCodeDataDirs, antigravityTokenFiles, t3AntigravityProvidersDir } = require('./platform.cjs');
 
 async function readJson(file) {
   try {
@@ -60,6 +60,61 @@ async function readCursorCredential({ env = process.env, home = os.homedir() } =
   return null;
 }
 
+async function readAntigravityTokenFile(file, source, oauthClient) {
+  const auth = await readJson(file);
+  if (!auth || typeof auth !== 'object') return null;
+  const record = auth.token && typeof auth.token === 'object' ? auth.token : auth;
+  const token = validToken(record.access_token);
+  const refreshToken = validToken(record.refresh_token);
+  if (!token && !refreshToken) return null;
+  const parsedExpiry = typeof record.expiry === 'string' ? Date.parse(record.expiry)
+    : typeof record.expiry_date === 'number' ? record.expiry_date
+      : typeof record.expires_at === 'number' ? record.expires_at : NaN;
+  const expiresAt = Number.isFinite(parsedExpiry) && parsedExpiry > 0 ? parsedExpiry : null;
+  return {
+    token,
+    refreshToken,
+    expiresAt,
+    accountId: validToken(auth.id_token_email),
+    oauthClient,
+    source,
+  };
+}
+
+function loadAntigravityClient(env) {
+  const clientId = validToken(env.ANTIGRAVITY_OAUTH_CLIENT_ID);
+  const clientSecret = validToken(env.ANTIGRAVITY_OAUTH_CLIENT_SECRET);
+  return clientId && clientSecret ? { clientId, clientSecret } : null;
+}
+
+async function loadAntigravityCredential({ env = process.env, home = os.homedir(), now = Date.now } = {}) {
+  const oauthClient = loadAntigravityClient(env);
+  if (env.ANTIGRAVITY_OAUTH_TOKEN_FILE) {
+    return readAntigravityTokenFile(env.ANTIGRAVITY_OAUTH_TOKEN_FILE, 'Antigravity', oauthClient);
+  }
+  const candidates = [];
+  for (const file of antigravityTokenFiles({ env, home })) {
+    const source = file.includes('antigravity-cli') ? 'Antigravity CLI' : 'Antigravity';
+    const entry = await readAntigravityTokenFile(file, source, oauthClient);
+    if (entry) candidates.push(entry);
+  }
+  const t3Dir = t3AntigravityProvidersDir({ env, home });
+  try {
+    const instances = await fs.readdir(t3Dir, { withFileTypes: true });
+    for (const instance of instances) {
+      if (!instance.isDirectory()) continue;
+      const entry = await readAntigravityTokenFile(path.join(t3Dir, instance.name, 'antigravity-acp', 'antigravity-oauth-token'), 'T3 Code · Antigravity', oauthClient);
+      if (entry) candidates.push(entry);
+    }
+  } catch { /* T3 Code Antigravity directory may not exist. */ }
+  if (!candidates.length) return null;
+  const currentTime = now();
+  const isFresh = (entry) => Boolean(entry.token) && (entry.expiresAt === null || entry.expiresAt > currentTime);
+  const canRefresh = (entry) => Boolean(entry.refreshToken && oauthClient);
+  const score = (entry) => (isFresh(entry) ? 2 : canRefresh(entry) ? 1 : 0);
+  return candidates.sort((a, b) => score(b) - score(a) || (b.expiresAt ?? 0) - (a.expiresAt ?? 0))[0];
+}
+
 async function githubCliToken() {
   try {
     const { stdout } = await execFileAsync(executable('gh'), ['auth', 'token', '--hostname', 'github.com'], { windowsHide: true, timeout: 5000, maxBuffer: 32768 });
@@ -67,7 +122,7 @@ async function githubCliToken() {
   } catch { return null; }
 }
 
-async function loadCredential(provider, { env = process.env, home = os.homedir(), managedCredential = null, githubTokenLoader = githubCliToken, githubAccountTokenLoader = githubAccountToken, claudeSessionRenewer = renewClaudeSignIn } = {}) {
+async function loadCredential(provider, { env = process.env, home = os.homedir(), now = Date.now, managedCredential = null, githubTokenLoader = githubCliToken, githubAccountTokenLoader = githubAccountToken, claudeSessionRenewer = renewClaudeSignIn } = {}) {
   if (provider === 'copilot' && managedCredential?.mode === 'github-cli') {
     const login = managedCredential.login;
     if (!validGitHubLogin(login)) throw new Error('Ungültiges GitHub-Konto. Konto erneut auswählen.');
@@ -106,6 +161,8 @@ async function loadCredential(provider, { env = process.env, home = os.homedir()
     const refreshToken = validToken(auth?.refresh_token);
     if (token || refreshToken) return { token, refreshToken, expiresAt: auth.expiry_date, projectId: env.GOOGLE_CLOUD_PROJECT || env.GOOGLE_CLOUD_PROJECT_ID || null, oauthClient: await loadGeminiClient({ env, home }), source: 'Gemini CLI' };
     return openCodeCredential(provider, env, home);
+  } else if (provider === 'antigravity') {
+    return loadAntigravityCredential({ env, home, now });
   } else if (provider === 'openrouter') {
     const token = validToken(env.OPENROUTER_API_KEY);
     if (token) return { token, source: 'OPENROUTER_API_KEY' };

@@ -36,8 +36,8 @@ class ProviderService {
         entry = { fingerprint, rows: [], fetchedAt: null, retryAt: 0 };
         this.cache.set(id, entry);
       }
-      if (typeof credential.expiresAt === 'number' && credential.expiresAt <= this.now() && !(id === 'gemini' && credential.refreshToken)) {
-        throw new Error(id === 'claude' ? CLAUDE_SIGN_IN_REQUIRED : `Anmeldung abgelaufen. ${meta.name} öffnen.`);
+      if (typeof credential.expiresAt === 'number' && credential.expiresAt <= this.now() && !((id === 'gemini' || id === 'antigravity') && credential.refreshToken)) {
+        throw new Error(id === 'claude' ? CLAUDE_SIGN_IN_REQUIRED : id === 'antigravity' ? 'Anmeldung abgelaufen. Antigravity oder T3 Code öffnen.' : `Anmeldung abgelaufen. ${meta.name} öffnen.`);
       }
       if (entry.retryAt > this.now()) throw new Error('Zu viele Abfragen. Neuer Versuch nach der Wartezeit.');
       if (entry.profileError) throw new Error(entry.profileError);
@@ -65,6 +65,11 @@ class ProviderService {
         }
         if (id === 'gemini' && response.status === 403) {
           throw new Error('Google gibt für diese Anmeldung keine Gemini-CLI-Kontingente frei. Gemini CLI mit diesem Konto einrichten.');
+        }
+        if (id === 'antigravity') {
+          throw new Error(response.status === 403
+            ? 'Google gibt für diese Anmeldung keine Antigravity-Kontingente frei. Anmeldung in Antigravity prüfen.'
+            : 'Anmeldung erneuern. Antigravity oder T3 Code öffnen.');
         }
         throw new Error(id === 'copilot' ? 'GitHub-Anmeldung erlaubt keine Copilot-Nutzung. Passenden Token einrichten.' : `Anmeldung erneuern. ${meta.name === 'Claude' ? 'Claude Code' : meta.name} öffnen.`);
       }

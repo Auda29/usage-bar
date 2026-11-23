@@ -2,9 +2,9 @@
 
 [Website (DE)](https://auda29.github.io/usage-bar/) · [Website (EN)](https://auda29.github.io/usage-bar/en.html) · [Downloads](https://github.com/Auda29/usage-bar/releases/latest)
 
-A small Windows tray app for usage limits across Claude, Codex, Gemini, GitHub Copilot, Cursor, and OpenRouter, with seven selectable designs.
+A small Windows tray app for usage limits across Claude, Codex, Gemini, Antigravity, GitHub Copilot, Cursor, and OpenRouter, with seven selectable designs.
 
-![Usage Bar showing all six selectable providers](docs/images/usage-bar.png)
+![Usage Bar showing all seven selectable providers](docs/images/usage-bar.png)
 
 The screenshot uses clearly labeled sample data.
 
@@ -56,13 +56,14 @@ Under "Funktionen" (Features), three optional views work with every design and c
 | Claude | Hourly and weekly limits, including reset times | Claude Code OAuth sign-in with profile permission; environment token or OpenCode OAuth as fallbacks |
 | Codex | Subscription usage limits, reset times, and credit balance | Existing Codex sign-in or OpenCode OAuth; an OpenAI API key alone is not sufficient |
 | Gemini | Model quotas and reset times | Gemini CLI Google sign-in or OpenCode OAuth; a Gemini API key alone is not sufficient |
+| Antigravity | 5-hour and weekly quotas per model group and reset times | Existing Antigravity CLI (`agy`) or T3 Code Antigravity Google sign-in |
 | GitHub Copilot | AI credit usage and reset date | GitHub CLI account selection, local Copilot or OpenCode sign-in, environment token, or manually saved token with Copilot usage access |
 | Cursor | Plan usage or spending, Auto/API breakdown, and on-demand quota where available | Explicit import of the Cursor desktop sign-in, environment token, or manually saved access token |
 | OpenRouter | API-key budget and usage, or monthly spending for keys without a budget | Regular API key saved in the app, `OPENROUTER_API_KEY`, or OpenCode sign-in |
 
 Each provider can be enabled independently under "Provider einrichten…" (Set up providers). Only enabled providers are polled. See [Authentication and data](#authentication-and-data) for setup instructions and account restrictions.
 
-Release **v1.1.0** supports all six providers listed above. Release **v1.0.0** supports Claude and Codex only.
+Release **v1.4.0** supports all seven providers listed above, adding Antigravity. Release **v1.1.0** supports the previous six providers. Release **v1.0.0** supports Claude and Codex only.
 
 ## Download
 
@@ -105,7 +106,7 @@ The tray icon switches between dark and light bars to match the Windows system t
 
 Usage Bar reads existing local sign-ins. Credentials are never passed to the renderer, logged, or copied into app settings.
 
-Claude and Codex are enabled by default. Updates preserve existing settings, with the four additional providers initially disabled. Enable providers in the tray menu or setup window. One provider is enough; disabled providers do not make periodic network requests.
+Claude and Codex are enabled by default. Updates preserve existing settings, with the five additional providers initially disabled. Enable providers in the tray menu or setup window. One provider is enough; disabled providers do not make periodic network requests.
 
 **Claude:** Reads the `claudeAiOauth` section in `~/.claude/.credentials.json`, respecting `CLAUDE_CONFIG_DIR`. A current stored sign-in with `user:profile` or `user:office` permission takes priority for usage queries, even when `CLAUDE_CODE_OAUTH_TOKEN` is set. Otherwise, an environment token remains available, followed by the stored sign-in and OpenCode OAuth fallback. Usage data comes from `https://api.anthropic.com/api/oauth/usage`.
 
@@ -124,6 +125,8 @@ If a sign-in is missing or cannot be renewed, open Claude Code or Codex and sign
 **Gemini:** Reads the Gemini CLI Google sign-in from `~/.gemini/oauth_creds.json`. Set `GEMINI_CREDENTIALS_FILE` to use another file, or `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_PROJECT_ID` to specify a project. Otherwise, the app discovers the project through `loadCodeAssist` and reads model quotas through `retrieveUserQuota`. Expired Google access tokens can be renewed using the existing refresh token in memory only; the CLI file is not changed. A Gemini API key is not sufficient for this authentication method. If Google denies quota access, first set up Gemini CLI with the relevant account.
 
 Automatic Gemini token renewal reads the public OAuth client parameters from a locally installed Gemini CLI. Usage Bar does not bundle those parameters or execute CLI source files. Standard npm installations are detected automatically; set `GEMINI_CLI_DIR` to the `@google/gemini-cli` package directory for other locations. Alternatively, provide both `GEMINI_OAUTH_CLIENT_ID` and `GEMINI_OAUTH_CLIENT_SECRET` for the client associated with the sign-in. If the client configuration is unavailable, existing valid access tokens still work; renew expired tokens in Gemini CLI.
+
+**Antigravity:** Reads the existing Antigravity OAuth sign-in from `~/.gemini/antigravity-cli/antigravity-oauth-token`, `~/.gemini/antigravity/antigravity-oauth-token`, or T3 Code's Antigravity ACP data under `~/.t3/userdata/providers/antigravity/*/antigravity-acp/antigravity-oauth-token` (respecting `ANTIGRAVITY_OAUTH_TOKEN_FILE` and `T3_USERDATA_DIR`). Files are read only and never modified. Usage Bar queries `retrieveUserQuotaSummary` for 5-hour and weekly limits across Antigravity model groups (such as Gemini, Claude & GPT, and Argon). When multiple local sign-ins exist, the freshest valid token is selected. If the access token expires, reopen Antigravity or T3 Code to renew it, or provide `ANTIGRAVITY_OAUTH_CLIENT_ID` and `ANTIGRAVITY_OAUTH_CLIENT_SECRET` for in-memory renewal.
 
 **GitHub Copilot:** Uses `COPILOT_GITHUB_TOKEN`, `GH_TOKEN`, or `GITHUB_TOKEN`, existing `github.com` sign-ins in `~/.config/github-copilot/hosts.json` or `apps.json`, OpenCode, or the active GitHub CLI sign-in through `gh auth token --hostname github.com`. Alternatively, save a GitHub token in the setup window. The token must have access to Copilot usage; not every GitHub token is suitable. The app displays AI credits from `copilot_internal/user`. GitHub Enterprise Server instances on custom domains are not yet supported.
 
@@ -176,7 +179,7 @@ Operating-system differences (executable names, Cursor and npm locations, OpenCo
 
 To wrap an already packaged release without rebuilding its application files, run `node scripts/installer.cjs "path/to/Usage Bar-win32-x64"`. Its name and version must match `package.json`.
 
-The smoke test checks the actual Electron tray, IPC, logos, row dimensions, window height, collapsing/expanding, refresh, Escape, all six provider checkboxes, the setup window, and Windows encryption. Screenshots are saved to `artifacts/usage-bar-demo.png`, `artifacts/usage-bar-all-providers.png`, and `artifacts/usage-bar-provider-settings.png`. The browser preview uses the same HTML/CSS/JS files. It does not expose real data or credentials. `check:providers` checks authentication files and environment variables, not the desktop app's encrypted token storage.
+The smoke test checks the actual Electron tray, IPC, logos, row dimensions, window height, collapsing/expanding, refresh, Escape, all seven provider checkboxes, the setup window, and Windows encryption. Screenshots are saved to `artifacts/usage-bar-demo.png`, `artifacts/usage-bar-all-providers.png`, and `artifacts/usage-bar-provider-settings.png`. The browser preview uses the same HTML/CSS/JS files. It does not expose real data or credentials. `check:providers` checks authentication files and environment variables, not the desktop app's encrypted token storage.
 
 ## Credits
 

@@ -1,7 +1,25 @@
 const { parseClaude, parseCodex } = require('./model.cjs');
-const { parseGemini, parseCopilot, parseOpenRouter, parseCursor } = require('./additional-models.cjs');
+const { parseGemini, parseAntigravity, parseCopilot, parseOpenRouter, parseCursor } = require('./additional-models.cjs');
 
 const GOOGLE_BASE = 'https://cloudcode-pa.googleapis.com/v1internal:';
+const ANTIGRAVITY_QUOTA_URL = 'https://daily-cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary';
+const ANTIGRAVITY_USER_AGENT = 'antigravity/cli/1.5.15';
+
+async function resolveGoogleToken(credential, cache, request, now, { expiredMessage, missingClientMessage }) {
+  let token = cache.oauth && cache.oauth.expiresAt > now() + 30000 ? cache.oauth.token : credential.token;
+  if ((!token || (credential.expiresAt && credential.expiresAt <= now() + 30000)) && !(cache.oauth?.expiresAt > now() + 30000)) {
+    if (!credential.refreshToken) throw new Error(expiredMessage);
+    if (!credential.oauthClient?.clientId || !credential.oauthClient?.clientSecret) throw new Error(missingClientMessage);
+    const refreshed = await request('https://oauth2.googleapis.com/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: credential.oauthClient.clientId, client_secret: credential.oauthClient.clientSecret, refresh_token: credential.refreshToken, grant_type: 'refresh_token' }).toString(),
+    });
+    if (typeof refreshed.access_token !== 'string' || !refreshed.access_token) throw new Error('Google hat keinen gültigen Zugriffstoken geliefert.');
+    token = refreshed.access_token;
+    cache.oauth = { token, expiresAt: now() + (Number(refreshed.expires_in) > 0 ? Number(refreshed.expires_in) : 3600) * 1000 };
+  }
+  return token;
+}
 
 async function fetchProvider(id, credential, cache, request, now) {
   const bearer = { Authorization: `Bearer ${credential.token}` };
@@ -15,18 +33,10 @@ async function fetchProvider(id, credential, cache, request, now) {
     method: 'POST', headers: { ...bearer, 'Content-Type': 'application/json', 'Connect-Protocol-Version': '1' }, body: '{}',
   }));
   if (id === 'gemini') {
-    let token = cache.oauth && cache.oauth.expiresAt > now() + 30000 ? cache.oauth.token : credential.token;
-    if ((!token || (credential.expiresAt && credential.expiresAt <= now() + 30000)) && !(cache.oauth?.expiresAt > now() + 30000)) {
-      if (!credential.refreshToken) throw new Error('Gemini-Anmeldung abgelaufen. Bitte Gemini CLI öffnen.');
-      if (!credential.oauthClient?.clientId || !credential.oauthClient?.clientSecret) throw new Error('Gemini-Anmeldung abgelaufen. Bitte mit Gemini CLI erneuern. Für automatische Erneuerung muss die CLI lokal installiert sein.');
-      const refreshed = await request('https://oauth2.googleapis.com/token', {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ client_id: credential.oauthClient.clientId, client_secret: credential.oauthClient.clientSecret, refresh_token: credential.refreshToken, grant_type: 'refresh_token' }).toString(),
-      });
-      if (typeof refreshed.access_token !== 'string' || !refreshed.access_token) throw new Error('Google hat keinen gültigen Zugriffstoken geliefert.');
-      token = refreshed.access_token;
-      cache.oauth = { token, expiresAt: now() + (Number(refreshed.expires_in) > 0 ? Number(refreshed.expires_in) : 3600) * 1000 };
-    }
+    const token = await resolveGoogleToken(credential, cache, request, now, {
+      expiredMessage: 'Gemini-Anmeldung abgelaufen. Bitte Gemini CLI öffnen.',
+      missingClientMessage: 'Gemini-Anmeldung abgelaufen. Bitte mit Gemini CLI erneuern. Für automatische Erneuerung muss die CLI lokal installiert sein.',
+    });
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     let projectId = credential.projectId || cache.projectId;
     if (!projectId) {
@@ -38,6 +48,17 @@ async function fetchProvider(id, credential, cache, request, now) {
       if (projectId) cache.projectId = projectId;
     }
     return parseGemini(await request(`${GOOGLE_BASE}retrieveUserQuota`, { method: 'POST', headers, body: JSON.stringify(projectId ? { project: projectId } : {}) }));
+  }
+  if (id === 'antigravity') {
+    const token = await resolveGoogleToken(credential, cache, request, now, {
+      expiredMessage: 'Anmeldung abgelaufen. Antigravity oder T3 Code öffnen.',
+      missingClientMessage: 'Anmeldung abgelaufen. Antigravity oder T3 Code öffnen.',
+    });
+    return parseAntigravity(await request(ANTIGRAVITY_QUOTA_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': ANTIGRAVITY_USER_AGENT },
+      body: '{}',
+    }));
   }
   throw new Error('Unbekannter Provider.');
 }

@@ -18,6 +18,47 @@ function parseGemini(payload) {
   return requireRows([...models.values()]);
 }
 
+function antigravityGroupLabel(displayName) {
+  if (typeof displayName !== 'string' || !displayName.trim()) return '';
+  return displayName.trim()
+    .replace(/\s+models$/i, '')
+    .replace(/\s+and\s+/i, ' & ')
+    .replace(/^Gemini\s+\d+(?:\.\d+)?\s+/i, '');
+}
+
+function antigravityWindow(bucket) {
+  const hint = `${bucket?.window || ''} ${bucket?.bucketId || ''} ${bucket?.displayName || ''}`.toLowerCase();
+  if (bucket?.window === '5h' || /(?:^|[-_\s])5h(?:$|[-_\s])|five\s*hour/.test(hint)) return { label: '5h', seconds: 18000, order: 0 };
+  if (bucket?.window === 'daily' || /(?:^|[-_\s])(daily|24h|1d)(?:$|[-_\s])/.test(hint)) return { label: '24h', seconds: 86400, order: 1 };
+  if (bucket?.window === 'weekly' || /(?:^|[-_\s])(weekly|7d)(?:$|[-_\s])/.test(hint)) return { label: '7d', seconds: 604800, order: 2 };
+  const fallback = typeof bucket?.window === 'string' && bucket.window.trim() ? bucket.window.trim() : typeof bucket?.displayName === 'string' && bucket.displayName.trim() ? bucket.displayName.trim() : 'Limit';
+  return { label: fallback, seconds: null, order: 3 };
+}
+
+function parseAntigravity(payload) {
+  const buckets = new Map();
+  for (const group of Array.isArray(payload?.groups) ? payload.groups : []) {
+    const groupLabel = antigravityGroupLabel(group?.displayName);
+    const groupRows = [];
+    for (const bucket of Array.isArray(group?.buckets) ? group.buckets : []) {
+      const fraction = number(bucket?.remainingFraction);
+      if (fraction === null) continue;
+      const win = antigravityWindow(bucket);
+      const key = String(bucket?.bucketId || `${groupLabel || 'antigravity'}-${win.label}`);
+      const label = groupLabel ? `${groupLabel} · ${win.label}` : win.label;
+      const entry = row(key, label, (1 - fraction) * 100, bucket.resetTime, win.seconds);
+      const detail = [group?.description, bucket?.description].filter((text) => typeof text === 'string' && text.trim()).join(' · ');
+      if (detail) entry.detail = detail;
+      groupRows.push({ order: win.order, entry });
+    }
+    groupRows.sort((a, b) => a.order - b.order);
+    for (const { entry } of groupRows) {
+      if (!buckets.has(entry.key) || buckets.get(entry.key).usedPercent < entry.usedPercent) buckets.set(entry.key, entry);
+    }
+  }
+  return requireRows([...buckets.values()]);
+}
+
 function parseCopilot(payload) {
   const snapshot = payload?.quota_snapshots?.premium_interactions;
   if (!snapshot) return requireRows([]);
@@ -84,4 +125,4 @@ function parseCursor(payload) {
   return requireRows(rows);
 }
 
-module.exports = { parseGemini, parseCopilot, parseOpenRouter, parseCursor };
+module.exports = { parseGemini, parseAntigravity, parseCopilot, parseOpenRouter, parseCursor };

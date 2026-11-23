@@ -131,6 +131,36 @@ test('Gemini reads only the existing OAuth login and project hint', async (t) =>
   assert.equal(credential.refreshToken, 'gemini-refresh');
   assert.equal(credential.projectId, 'example-project');
 });
+test('Antigravity reads CLI and T3 Code OAuth files read-only and prefers the freshest valid token', async (t) => {
+  const options = await fixture(t);
+  const now = () => Date.parse('2026-11-23T08:00:00Z');
+  assert.equal(await loadCredential('antigravity', { ...options, now }), null);
+  const expiredCliFile = path.join(options.home, '.gemini', 'antigravity-cli', 'antigravity-oauth-token');
+  await write(expiredCliFile, { token: { access_token: 'expired-cli', refresh_token: 'cli-refresh', expiry: '2026-11-23T07:00:00Z' }, id_token_email: 'old@example.test' });
+  const t3File = path.join(options.home, '.t3', 'userdata', 'providers', 'antigravity', 'inst-a', 'antigravity-acp', 'antigravity-oauth-token');
+  await write(t3File, { token: { access_token: 'fresh-t3', refresh_token: 't3-refresh', expiry: '2026-11-23T09:00:00Z' }, id_token_email: 'user@example.test' });
+  const before = await fs.readFile(t3File, 'utf8');
+  const picked = await loadCredential('antigravity', { ...options, now });
+  assert.equal(picked.token, 'fresh-t3');
+  assert.equal(picked.refreshToken, 't3-refresh');
+  assert.equal(picked.expiresAt, Date.parse('2026-11-23T09:00:00Z'));
+  assert.equal(picked.accountId, 'user@example.test');
+  assert.equal(picked.source, 'T3 Code · Antigravity');
+  assert.equal(picked.oauthClient, null);
+  assert.equal(await fs.readFile(t3File, 'utf8'), before);
+
+  const overrideFile = path.join(options.home, 'custom-antigravity-token');
+  await write(overrideFile, { token: { access_token: 'override-token', expiry: '2026-11-23T08:30:00Z' } });
+  const override = await loadCredential('antigravity', {
+    ...options,
+    now,
+    env: { ANTIGRAVITY_OAUTH_TOKEN_FILE: overrideFile, ANTIGRAVITY_OAUTH_CLIENT_ID: 'cid', ANTIGRAVITY_OAUTH_CLIENT_SECRET: 'csec' },
+  });
+  assert.equal(override.token, 'override-token');
+  assert.deepEqual(override.oauthClient, { clientId: 'cid', clientSecret: 'csec' });
+  const incomplete = await loadCredential('antigravity', { ...options, now, env: { ANTIGRAVITY_OAUTH_TOKEN_FILE: overrideFile, ANTIGRAVITY_OAUTH_CLIENT_ID: 'cid' } });
+  assert.equal(incomplete.oauthClient, null);
+});
 test('OpenRouter accepts its key without using another provider credential', async (t) => {
   const options = await fixture(t);
   options.env.OPENROUTER_API_KEY = 'router-key';

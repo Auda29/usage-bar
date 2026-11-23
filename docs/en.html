@@ -5,10 +5,10 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Usage Bar · Your AI limits at a glance</title>
-<meta content="Claude, Codex, Gemini, Copilot, Cursor and OpenRouter in one Windows tray app. Usage, reset times and seven designs. Free download." name="description"/>
+<meta content="Claude, Codex, Gemini, Antigravity, Copilot, Cursor and OpenRouter in one Windows tray app. Usage, reset times and seven designs. Free download." name="description"/>
 <meta content="#101113" name="theme-color"/>
 <meta content="Usage Bar · Your AI limits at a glance" property="og:title"/>
-<meta content="A small Windows app for your AI service usage limits. Six providers. Seven designs." property="og:description"/>
+<meta content="A small Windows app for your AI service usage limits. Seven providers. Seven designs." property="og:description"/>
 <meta content="website" property="og:type"/>
 <meta content="https://auda29.github.io/usage-bar/en.html" property="og:url"/>
 <meta content="https://auda29.github.io/usage-bar/images/usage-bar.png" property="og:image"/>
@@ -34,13 +34,13 @@
 <div><div class="eyebrow">Windows tray app · Open source</div>
 <h1 id="hero-title">Your AI limits.<br/><span>One quick look.</span></h1>
 <p class="lead">How much is left? Usage Bar shows usage and reset times for your AI services, right next to the Windows clock.</p>
-<div class="actions"><a class="btn primary" href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/Usage-Bar-v1.3.0-windows-x64-Setup.exe">Download for Windows <span aria-hidden="true">↓</span></a><a class="btn" href="#designs">Explore the designs <span aria-hidden="true">↗</span></a></div>
-<p class="small hero-note">v1.3.0 · Windows 10 / 11 · x64 · MIT license</p>
+<div class="actions"><a class="btn primary" href="https://github.com/Auda29/usage-bar/releases/download/v1.4.0/Usage-Bar-v1.4.0-windows-x64-Setup.exe">Download for Windows <span aria-hidden="true">↓</span></a><a class="btn" href="#designs">Explore the designs <span aria-hidden="true">↗</span></a></div>
+<p class="small hero-note">v1.4.0 · Windows 10 / 11 · x64 · MIT license</p>
 </div>
-<figure class="hero-media"><div class="media-top"><span>YOUR SERVICES, TOGETHER</span><span class="live">6 PROVIDERS</span></div><img alt="Usage Bar showing usage and reset times for all six providers with clearly labelled sample data" fetchpriority="high" height="550" src="images/usage-bar.png" width="355"/><figcaption>Actual app screenshot with sample data.</figcaption></figure>
+<figure class="hero-media"><div class="media-top"><span>YOUR SERVICES, TOGETHER</span><span class="live">7 PROVIDERS</span></div><img alt="Usage Bar showing usage and reset times for all seven providers with clearly labelled sample data" fetchpriority="high" height="585" src="images/usage-bar.png" width="310"/><figcaption>Actual app screenshot with sample data.</figcaption></figure>
 </section>
 <div aria-label="Supported providers" class="provider-strip">
-<span class="provider"><img alt="" height="22" src="images/providers/claude.svg" width="22"/>Claude</span><span class="provider"><img alt="" height="22" src="images/providers/codex.svg" width="22"/>Codex</span><span class="provider"><img alt="" height="22" src="images/providers/gemini.svg" width="22"/>Gemini</span><span class="provider"><img alt="" height="22" src="images/providers/copilot.svg" width="22"/>GitHub Copilot</span><span class="provider"><img alt="" height="22" src="images/providers/cursor.svg" width="22"/>Cursor</span><span class="provider"><img alt="" height="22" src="images/providers/openrouter.svg" width="22"/>OpenRouter</span>
+<span class="provider"><img alt="" height="22" src="images/providers/claude.svg" width="22"/>Claude</span><span class="provider"><img alt="" height="22" src="images/providers/codex.svg" width="22"/>Codex</span><span class="provider"><img alt="" height="22" src="images/providers/gemini.svg" width="22"/>Gemini</span><span class="provider"><img alt="" height="22" src="images/providers/antigravity.svg" width="22"/>Antigravity</span><span class="provider"><img alt="" height="22" src="images/providers/copilot.svg" width="22"/>GitHub Copilot</span><span class="provider"><img alt="" height="22" src="images/providers/cursor.svg" width="22"/>Cursor</span><span class="provider"><img alt="" height="22" src="images/providers/openrouter.svg" width="22"/>OpenRouter</span>
 </div>
 <section aria-labelledby="overview-title" class="section">
 <div class="section-head"><div><span class="section-index">01 / EVERYDAY USE</span><h2 id="overview-title">Check less.<br/>Keep working.</h2></div><p class="section-intro">Click the tray icon to open your overview. Click again to close it.</p></div>
@@ -66,6 +66,7 @@
 <tr><td>Claude</td><td>Hourly and weekly limits, resets</td><td>Claude Code with profile permission or OpenCode OAuth</td></tr>
 <tr><td>Codex</td><td>Subscription limits, resets and credits</td><td>Codex sign-in or OpenCode OAuth</td></tr>
 <tr><td>Gemini</td><td>Model quotas and resets</td><td>Gemini CLI Google sign-in or OpenCode OAuth</td></tr>
+<tr><td>Antigravity</td><td>5-hour and weekly limits per model group</td><td>Existing Antigravity CLI or T3 Code sign-in</td></tr>
 <tr><td>GitHub Copilot</td><td>AI credits and reset date</td><td>GitHub CLI, local sign-in or a suitable token</td></tr>
 <tr><td>Cursor</td><td>Plan usage, Auto/API usage and available extra quotas</td><td>Explicit desktop sign-in import or token</td></tr>
 <tr><td>OpenRouter</td><td>Key budget and usage, otherwise monthly spending</td><td>Regular API key or OpenCode sign-in</td></tr>
@@ -75,8 +76,8 @@
 <section aria-labelledby="download-title" class="section" id="download">
 <div class="section-head"><div><span class="section-index">04 / GET STARTED</span><h2 id="download-title">Install. Connect.<br/>Keep track.</h2></div><p class="section-intro">Windows 10 or 11, x64. No Node.js, OpenChamber or administrator rights needed for a normal installation.</p></div>
 <div class="steps"><article class="step"><h3>Install the app</h3><p>Download the installer and run Setup. Alternatively, extract the entire portable ZIP and open <code>Usage Bar.exe</code>.</p></article><article class="step"><h3>Set up providers</h3><p>Right-click the tray icon → "Provider einrichten…" (Set up providers). Enable your services and use the appropriate local sign-in or save a token.</p></article><article class="step"><h3>Choose your view</h3><p>Left-click to open the overview. Designs and optional views are in the context menu. If the icon is hidden in the overflow area, drag it next to the clock.</p></article></div>
-<div class="download-panel"><div><h3>Usage Bar v1.3.0</h3><p class="small">Windows x64 · Installer or portable version</p></div><div class="actions"><a class="btn primary" href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/Usage-Bar-v1.3.0-windows-x64-Setup.exe">Installer ↓</a><a class="btn" href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/Usage-Bar-v1.3.0-windows-x64.zip">Portable ZIP ↓</a></div></div>
-<p class="small"><a href="https://github.com/Auda29/usage-bar/releases/latest">Latest release and changes</a> · <a href="https://github.com/Auda29/usage-bar/releases/download/v1.3.0/SHA256SUMS.txt">SHA-256 checksums for v1.3.0</a>. The installer is currently unsigned.</p>
+<div class="download-panel"><div><h3>Usage Bar v1.4.0</h3><p class="small">Windows x64 · Installer or portable version</p></div><div class="actions"><a class="btn primary" href="https://github.com/Auda29/usage-bar/releases/download/v1.4.0/Usage-Bar-v1.4.0-windows-x64-Setup.exe">Installer ↓</a><a class="btn" href="https://github.com/Auda29/usage-bar/releases/download/v1.4.0/Usage-Bar-v1.4.0-windows-x64.zip">Portable ZIP ↓</a></div></div>
+<p class="small"><a href="https://github.com/Auda29/usage-bar/releases/latest">Latest release and changes</a> · <a href="https://github.com/Auda29/usage-bar/releases/download/v1.4.0/SHA256SUMS.txt">SHA-256 checksums for v1.4.0</a>. The installer is currently unsigned.</p>
 <p class="small">The app currently uses German interface labels. The website uses English names for the design previews.</p></section>
 <section aria-labelledby="faq-title" class="section"><div class="section-head"><div><span class="section-index">05 / GOOD TO KNOW</span><h2 id="faq-title">Any questions?</h2></div></div>
 <details><summary>Does Usage Bar cost anything?</summary><p>Usage Bar is available under the MIT license. The download is free. You need separate accounts and, where applicable, paid plans for the connected services.</p></details>

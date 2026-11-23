@@ -4,6 +4,7 @@
 [data-provider="claude"] { --brand: #d97757; }
 [data-provider="codex"] { --brand: #3fbf95; }
 [data-provider="gemini"] { --brand: #7c8cff; }
+[data-provider="antigravity"] { --brand: #4cc2ff; }
 [data-provider="copilot"] { --brand: #b083f0; }
 [data-provider="cursor"] { --brand: #cfd3dc; }
 [data-provider="openrouter"] { --brand: #7a7cf5; }

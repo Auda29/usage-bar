@@ -48,9 +48,25 @@ function openCodeDataDirs(options) {
   ].filter(Boolean);
 }
 
+function antigravityTokenFiles(options) {
+  const { env, home, platform } = defaults(options);
+  const p = pathFor(platform);
+  return [
+    env.ANTIGRAVITY_OAUTH_TOKEN_FILE,
+    p.join(home, '.gemini', 'antigravity-cli', 'antigravity-oauth-token'),
+    p.join(home, '.gemini', 'antigravity', 'antigravity-oauth-token'),
+  ].filter(Boolean);
+}
+
+function t3AntigravityProvidersDir(options) {
+  const { env, home, platform } = defaults(options);
+  const p = pathFor(platform);
+  return p.join(env.T3_USERDATA_DIR || p.join(home, '.t3', 'userdata'), 'providers', 'antigravity');
+}
+
 // Electron's login item API covers Windows and macOS; Linux needs an autostart entry instead.
 function supportsLoginItems(platform = process.platform) {
   return platform === 'win32' || platform === 'darwin';
 }
 
-module.exports = { executable, userAppDataDir, cursorStateFile, npmGlobalRoots, openCodeDataDirs, supportsLoginItems };
+module.exports = { executable, userAppDataDir, cursorStateFile, npmGlobalRoots, openCodeDataDirs, antigravityTokenFiles, t3AntigravityProvidersDir, supportsLoginItems };

@@ -202,3 +202,66 @@ test('expired Gemini token without local client configuration asks for CLI renew
   assert.equal(result.status, 'error');
   assert.match(result.error, /mit Gemini CLI erneuern/);
 });
+
+test('Antigravity queries the quota summary endpoint, keeps credentials private, and refreshes in memory when configured', async () => {
+  const seen = [];
+  const service = new ProviderService({
+    now: () => 100000,
+    credentialLoader: async () => ({ token: 'ag-token', accountId: 'private@example.test', expiresAt: 200000, source: 'T3 Code · Antigravity' }),
+    fetchImpl: async (url, options) => {
+      seen.push({ url, options });
+      return Response.json({
+        groups: [{
+          displayName: 'Gemini Models',
+          buckets: [
+            { bucketId: 'gemini-5h', window: '5h', resetTime: '2026-11-23T12:48:54Z', remainingFraction: 0.75 },
+            { bucketId: 'gemini-weekly', window: 'weekly', resetTime: '2026-11-29T18:26:36Z', remainingFraction: 0.875 },
+          ],
+        }],
+      });
+    },
+  });
+  const result = await service.read('antigravity');
+  assert.equal(result.status, 'ok');
+  assert.equal(result.source, 'T3 Code · Antigravity');
+  assert.deepEqual(result.rows.map(({ label, usedPercent }) => ({ label, usedPercent })), [
+    { label: 'Gemini · 5h', usedPercent: 25 },
+    { label: 'Gemini · 7d', usedPercent: 12.5 },
+  ]);
+  assert.equal(seen[0].url, 'https://daily-cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary');
+  assert.equal(seen[0].options.method, 'POST');
+  assert.equal(seen[0].options.headers.Authorization, 'Bearer ag-token');
+  assert.match(seen[0].options.headers['User-Agent'], /^antigravity\/cli\//);
+  assert.equal(seen[0].options.redirect, 'error');
+  assert(!JSON.stringify(result).includes('ag-token'));
+  assert(!JSON.stringify(result).includes('private@example.test'));
+
+  const expired = new ProviderService({
+    now: () => 200000,
+    credentialLoader: async () => ({ token: 'old-ag', refreshToken: 'ag-refresh', expiresAt: 100000, source: 'T3 Code · Antigravity' }),
+    fetchImpl: async () => { assert.fail('No request when expired without OAuth client'); },
+  });
+  const expiredResult = await expired.read('antigravity');
+  assert.equal(expiredResult.status, 'error');
+  assert.match(expiredResult.error, /Antigravity oder T3 Code öffnen/);
+
+  const refreshedCalls = [];
+  const refreshing = new ProviderService({
+    now: () => 200000,
+    credentialLoader: async () => ({ token: 'old-ag', refreshToken: 'ag-refresh', expiresAt: 100000, oauthClient: { clientId: 'ag-cid', clientSecret: 'ag-csec' }, source: 'Antigravity' }),
+    fetchImpl: async (url, options) => {
+      refreshedCalls.push(url);
+      if (url.includes('oauth2.googleapis.com')) return Response.json({ access_token: 'fresh-ag', expires_in: 3600 });
+      assert.equal(options.headers.Authorization, 'Bearer fresh-ag');
+      return Response.json({ groups: [{ displayName: 'Gemini Models', buckets: [{ bucketId: 'gemini-5h', window: '5h', remainingFraction: 0.5 }] }] });
+    },
+  });
+  assert.equal((await refreshing.read('antigravity')).rows[0].usedPercent, 50);
+  assert.equal(refreshedCalls.filter((url) => url.includes('oauth2.googleapis.com')).length, 1);
+
+  const denied = new ProviderService({
+    credentialLoader: async () => ({ token: 'ag-token', expiresAt: 9999999999999 }),
+    fetchImpl: async () => new Response(null, { status: 403 }),
+  });
+  assert.match((await denied.read('antigravity')).error, /Antigravity-Kontingente/);
+});

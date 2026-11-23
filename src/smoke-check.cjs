@@ -77,11 +77,11 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert.equal(await popup.webContents.executeJavaScript(`document.getElementById('refresh').disabled`), false);
   const { PROVIDER_IDS, PROVIDERS } = require('./catalog.cjs');
   const choices = getTrayMenu().items.find((item) => item.label === 'Provider anzeigen').submenu.items;
-  assert.equal(choices.length, 6);
+  assert.equal(choices.length, PROVIDERS.length);
   assert(choices.every((item) => item.type === 'checkbox'));
   const setup = await showSetup();
   await wait(150);
-  assert.equal(await setup.webContents.executeJavaScript(`document.querySelectorAll('input[type="checkbox"]').length`), 6);
+  assert.equal(await setup.webContents.executeJavaScript(`document.querySelectorAll('input[type="checkbox"]').length`), PROVIDERS.length);
   assert.equal(await setup.webContents.executeJavaScript(`document.querySelectorAll('input[type="checkbox"]:checked').length`), 2);
   const accountOptions = await setup.webContents.executeJavaScript(`[...document.getElementById('copilot-account').options].map(option => option.value)`);
   assert.deepEqual(accountOptions, ['automatic', 'github-cli:usagebar-personal', 'github-cli:usagebar-work']);
@@ -157,6 +157,6 @@ async function runSmoke({ popup, tray, app, showPopup, nativeTheme, trayImage, s
   assert.equal(popup.isVisible(), false);
   app.getLoginItemSettings = originalGetLoginItemSettings;
   app.setLoginItemSettings = originalSetLoginItemSettings;
-  console.log(JSON.stringify({ passed: true, version: app.getVersion(), packaged: app.isPackaged, systemUsesDarkColors: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI, checks: ['native tray', 'light/dark tray icons', 'dark native menu theme', 'sandboxed renderer', 'provider logos', 'row dimensions', 'credit precision', 'dynamic window height', 'collapse and expand', 'refresh IPC', 'six provider checkboxes', 'native menu selection', 'persisted provider selection', 'all-provider layout', 'setup window', 'Windows token encryption', 'remaining mode', 'stale indicators', 'empty provider selection', 'Escape hides popup'], screenshot: path.join(artifacts, 'usage-bar-all-providers.png') }, null, 2));
+  console.log(JSON.stringify({ passed: true, version: app.getVersion(), packaged: app.isPackaged, systemUsesDarkColors: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI, checks: ['native tray', 'light/dark tray icons', 'dark native menu theme', 'sandboxed renderer', 'provider logos', 'row dimensions', 'credit precision', 'dynamic window height', 'collapse and expand', 'refresh IPC', 'provider checkboxes', 'native menu selection', 'persisted provider selection', 'all-provider layout', 'setup window', 'Windows token encryption', 'remaining mode', 'stale indicators', 'empty provider selection', 'Escape hides popup'], screenshot: path.join(artifacts, 'usage-bar-all-providers.png') }, null, 2));
 }
 module.exports = { runSmoke };
