@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.4.0 - 2026-11-23
+
+- Add **Antigravity** as a selectable provider showing 5-hour and 7-day model-group quotas (`Gemini`, `Claude & GPT`, `Argon`) and reset times.
+- Read existing local Antigravity OAuth sign-ins read-only from the Antigravity CLI (`~/.gemini/antigravity-cli/antigravity-oauth-token`), `~/.gemini/antigravity/antigravity-oauth-token`, T3 Code's Antigravity ACP data, or `ANTIGRAVITY_OAUTH_TOKEN_FILE`, selecting the freshest valid token when multiple sign-ins exist.
+- Support optional in-memory OAuth token renewal when `ANTIGRAVITY_OAUTH_CLIENT_ID` and `ANTIGRAVITY_OAUTH_CLIENT_SECRET` are configured, without bundling OAuth client parameters or modifying local auth files.
+- Add the Antigravity icon, brand color, demo data, documentation, and unit and smoke tests across all seven providers.
+
 ## 1.3.0 - 2026-10-27
 
 - Build and test releases in GitHub Actions: CI runs the unit tests on Windows, Linux and macOS and smoke-tests the packaged Windows app; pushing a version tag creates a draft release with the installer, ZIP and checksums.
